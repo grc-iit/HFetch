@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.10)
+project(hfetch-test)
+set(CTEST_ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/")
+set(ENV{LD_PRELOAD} "ENV{LD_PRELOAD} ${CMAKE_BINARY_DIR}")
+
+#Execute basic examples
+set(examples basic)
+foreach (example ${examples})
+    add_executable (${example} ${example}.cpp util.h)
+    add_dependencies(${example} hfetch)
+    target_include_directories(${example} PRIVATE "${CMAKE_BINARY_DIR}/")
+    target_link_libraries(${example} ${LIBS})
+    set_target_properties (${example} PROPERTIES FOLDER test)
+    set (test_parameters "")
+    add_test(NAME ${example} COMMAND "$<TARGET_FILE:${example}>" ${test_parameters})
+    set_tests_properties(${example} PROPERTIES ENV TEST_ENV="LD_PRELOAD=${CMAKE_BINARY_DIR}/libhfetch.so")
+    set_tests_properties(${example} PROPERTIES WILL_FAIL true)
+endforeach()

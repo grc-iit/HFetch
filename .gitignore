@@ -1,0 +1,66 @@
+# Created by .ignore support plugin (hsz.mobi)
+### C++ template
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+.idea/encodings.xml
+.idea/hfetch.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/workspace.xml
+build/CMakeCache.txt
+build/CMakeFiles/3.13.2/CMakeCCompiler.cmake
+build/CMakeFiles/3.13.2/CMakeCXXCompiler.cmake
+build/CMakeFiles/3.13.2/CMakeDetermineCompilerABI_C.bin
+build/CMakeFiles/3.13.2/CMakeDetermineCompilerABI_CXX.bin
+build/CMakeFiles/3.13.2/CMakeSystem.cmake
+build/CMakeFiles/3.13.2/CompilerIdC/CMakeCCompilerId.c
+build/CMakeFiles/3.13.2/CompilerIdC/tmp/
+build/CMakeFiles/3.13.2/CompilerIdCXX/CMakeCXXCompilerId.cpp
+build/CMakeFiles/3.13.2/CompilerIdCXX/tmp/
+build/CMakeFiles/CMakeDirectoryInformation.cmake
+build/CMakeFiles/CMakeOutput.log
+build/CMakeFiles/CMakeTmp/
+build/CMakeFiles/Makefile.cmake
+build/CMakeFiles/Makefile2
+build/CMakeFiles/TargetDirectories.txt
+build/CMakeFiles/clion-environment.txt
+build/CMakeFiles/clion-log.txt
+build/CMakeFiles/cmake.check_cache
+build/CMakeFiles/feature_tests.bin
+build/CMakeFiles/feature_tests.c
+build/CMakeFiles/feature_tests.cxx
+build/CMakeFiles/progress.marks
+build/Makefile
+build/Project.cbp
+build/cmake_install.cmake
