@@ -24,14 +24,12 @@
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/algorithm/string.hpp>
-#include <src/common/rpc_lib.h>
+#include <src/common/constants.h>
+#include <src/common/distributed_ds/communication/rpc_lib.h>
 #include <src/common/singleton.h>
 
 /** Namespaces Uses **/
 namespace bip=boost::interprocess;
-
-/** Global Typedefs **/
-typedef unsigned long long int really_long;
 
 /**
  * This is a Distributed HashMap Class. It uses shared memory + RPC + MPI to achieve the data structure.
@@ -46,10 +44,10 @@ private:
     typedef boost::interprocess::deque<MappedType, ShmemAllocator> Queue;
 
     /** Class attributes**/
-    int ranks_per_server, comm_size, my_rank,bucket_count,num_servers;
-    uint16_t  server_index;
+    int comm_size, my_rank,num_servers;
+    uint16_t  my_server;
     std::shared_ptr<RPC> rpc;
-    really_long memeory_allocated;
+    really_long memory_allocated;
     bool is_server;
     boost::interprocess::managed_shared_memory segment;
     std::string name,func_prefix;
@@ -62,29 +60,23 @@ public:
     }
 
     explicit DistributedMessageQueue(std::string name_,
-                                     int ranks_per_server_ = 1,
-                                     really_long memory = 1024ULL * 1024ULL * 1024ULL)
-    :is_server(false), ranks_per_server(ranks_per_server_), server_index(0), num_servers(1),
-    comm_size(1), my_rank(0), memeory_allocated(memory), name(name_), segment(), queue(),func_prefix(name_){
+                                     bool is_server_,
+                                     uint16_t my_server_,
+                                     int num_servers_)
+            : is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
+              comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(),
+              queue(),func_prefix(name_){
         /* Initialize MPI rank and size of world */
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-        /* get which server the rank will connect to*/
-        server_index = static_cast<uint16_t>(my_rank / ranks_per_server);
-        /* get the port of that server */
         /* create per server name for shared memory. Needed if multiple servers are spawned on one node*/
-        this->name += "_" + std::to_string(server_index);
-        /* set whether current rank is server */
-        if ((my_rank + 1) % ranks_per_server == 0) is_server = true;
-        /* Calculate Max num of servers */
-        num_servers = comm_size / ranks_per_server;
-        /* if current rank is a server */
+        this->name += "_" + std::to_string(my_server);
         rpc=Singleton<RPC>::GetInstance();
         if (is_server) {
             /* Delete existing instance of shared memory space*/
             bip::shared_memory_object::remove(name.c_str());
             /* allocate new shared memory space */
-            segment=bip::managed_shared_memory(bip::create_only,name.c_str(),memeory_allocated);
+            segment=bip::managed_shared_memory(bip::create_only,name.c_str(),memory_allocated);
             ShmemAllocator alloc_inst (segment.get_segment_manager());
             /* Construct Hashmap in the shared memory space. */
             queue = segment.construct<Queue>("Queue")(alloc_inst);
@@ -119,7 +111,7 @@ public:
      * @return bool, true if Put was successful else false.
      */
     bool Push(MappedType data, uint16_t key_int){
-        if(key_int == server_index){
+        if(key_int == my_server){
             bip::scoped_lock<bip::interprocess_mutex> lock(*mutex);
             queue->push_back(std::move(data));
             return true;
@@ -134,7 +126,7 @@ public:
      *          and is present in value part else bool is set to false
      */
     std::pair<bool,MappedType> Pop(uint16_t key_int) {
-        if (key_int == server_index) {
+        if (key_int == my_server) {
             bip::scoped_lock<bip::interprocess_mutex> lock(*mutex);
             if(queue->size()>0){
                 MappedType value = queue->front();
@@ -152,7 +144,7 @@ public:
      * @return return a size of the queue
      */
     size_t Size(uint16_t key_int) {
-        if (key_int == server_index) {
+        if (key_int == my_server) {
             bip::scoped_lock<bip::interprocess_mutex> lock(*mutex);
             size_t value= queue->size();
             return value;

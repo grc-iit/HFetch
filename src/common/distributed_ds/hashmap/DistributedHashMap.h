@@ -17,8 +17,8 @@
 /** MPI Headers**/
 #include <mpi.h>
 /** RPC Lib Headers**/
-#include "../../../../external/rpclib/include/rpc/server.h"
-#include "../../../../external/rpclib/include/rpc/client.h"
+#include <rpc/server.h>
+#include <rpc/client.h>
 /** Boost Headers **/
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -27,9 +27,11 @@
 #include <functional>
 #include <boost/functional/hash.hpp>
 #include <boost/algorithm/string.hpp>
+#include <src/common/constants.h>
 #include <rpc/rpc_error.h>
-#include <src/common/rpc_lib.h>
+#include <src/common/distributed_ds/communication/rpc_lib.h>
 #include <src/common/singleton.h>
+#include <src/common/macros.h>
 
 /** Namespaces Uses **/
 
@@ -53,7 +55,6 @@ typedef unsigned long long int really_long;
         typedef boost::unordered_map<KeyType, MappedType, boost::hash<KeyType>, std::equal_to<KeyType>, ShmemAllocator> MyHashMap;
         /** Class attributes**/
         int comm_size, my_rank,num_servers;
-        /* get which server the rank will connect to*/
         uint16_t  my_server;
         std::shared_ptr<RPC> rpc;
         really_long memory_allocated;
@@ -75,31 +76,27 @@ typedef unsigned long long int really_long;
                                     bool is_server_,
                                     uint16_t my_server_,
                                     int num_servers_)
-                : is_server(is_server_), my_server(my_server_),num_servers(num_servers_),
-                  comm_size(1), my_rank(0), memory_allocated(1024ULL*1024ULL*1024ULL), name(name_), segment(),
+                : is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
+                  comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(),
                   myHashMap(),func_prefix(name_) {
 
             /* Initialize MPI rank and size of world */
             MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
             MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-            /* get the port of that server */
             /* create per server name for shared memory. Needed if multiple servers are spawned on one node*/
             this->name += "_" + std::to_string(my_server);
             /* if current rank is a server */
-            rpc=Singleton<RPC>::GetInstance();
+            rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",is_server_,my_server_,num_servers_);
             if (is_server) {
                 /* Delete existing instance of shared memory space*/
                 boost::interprocess::shared_memory_object::remove(name.c_str());
                 /* allocate new shared memory space */
-                segment = boost::interprocess::managed_shared_memory(boost::interprocess::create_only, name.c_str(),
-                                                                     memory_allocated);
+                segment = boost::interprocess::managed_shared_memory(boost::interprocess::create_only, name.c_str(), memory_allocated);
                 ShmemAllocator alloc_inst(segment.get_segment_manager());
-
                 mutex = segment.construct<boost::interprocess::interprocess_mutex>("mtx")();
                 /* Construct Hashmap in the shared memory space. */
                 myHashMap = segment.construct<MyHashMap>(name.c_str())(128, boost::hash<KeyType>(), std::equal_to<KeyType>(), segment.get_allocator<ValueType>());
                 /* Create a RPC server and map the methods to it. */
-
                 std::function<bool(KeyType, MappedType)> putFunc(
                         std::bind(&DistributedHashMap<KeyType, MappedType>::Put, this, std::placeholders::_1,
                                   std::placeholders::_2));
@@ -112,9 +109,7 @@ typedef unsigned long long int really_long;
                 rpc->bind(func_prefix+"_Erase", eraseFunc);
                 rpc->bind(func_prefix+"_GetAllData", getAllDataInServerFunc);
                 //srv->suppress_exceptions(true);
-                /* Asynchronously start the RPC server. Here we use thread pool of ranks per server to handle requests*/
             }
-
             /* Make clients wait untill all servers reach here*/
             MPI_Barrier(MPI_COMM_WORLD);
             /* Map the clients to their respective memory pools */

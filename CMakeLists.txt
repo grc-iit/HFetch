@@ -13,11 +13,11 @@ include_directories(${INSTALL_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR})
 #HFetch Common
-set(HFETCH_COMMON_SRC src/common/singleton.h src/common/rpc_lib.h src/common/rpc_lib.cpp src/common/distributed_ds/map/DistributedMap.h src/common/distributed_ds/hashmap/DistributedHashMap.h src/common/distributed_ds/priority_queue/DistributedPriorityQueue.h src/common/distributed_ds/queue/DistributedMessageQueue.h)
+set(HFETCH_COMMON_SRC src/common/singleton.h src/common/distributed_ds/clock/global_clock.h src/common/distributed_ds/sequencer/global_sequence.h src/common/distributed_ds/communication/rpc_lib.h src/common/distributed_ds/map/DistributedMap.h src/common/distributed_ds/hashmap/DistributedHashMap.h src/common/distributed_ds/priority_queue/DistributedPriorityQueue.h src/common/distributed_ds/queue/DistributedMessageQueue.h src/common/constants.h src/common/data_structure.h)
 
 #HFetch Library
 set(HFETCH_LIB_H_SRC include/hfetch.h)
-set(HFETCH_LIB_SRC ${HFETCH_COMMON_SRC} ${HFETCH_LIB_H_SRC} src/lib/hfetch.cpp)
+set(HFETCH_LIB_SRC ${HFETCH_COMMON_SRC} ${HFETCH_LIB_H_SRC} src/lib/hfetch.cpp src/common/configuration_manager.h src/common/macros.h src/common/typedefs.h src/common/enumerations.h src/common/data_structures.cpp src/common/io_clients/io_client_factory.h src/common/io_clients/file_client.cpp src/common/io_clients/file_client.h src/common/io_clients/memory_client.cpp src/common/io_clients/memory_client.h src/common/io_clients/io_client.h)
 
 add_library(hfetch SHARED ${HFETCH_LIB_SRC})
 target_link_libraries(hfetch -lmpi)
@@ -29,7 +29,7 @@ target_include_directories(hfetch PRIVATE .)
 install(TARGETS hfetch LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #HFetch Server
-set(HFETCH_SERVER_SRC ${HFETCH_COMMON_SRC} src/server/server.cpp)
+set(HFETCH_SERVER_SRC ${HFETCH_COMMON_SRC} src/server/main.cpp src/server/server.cpp src/server/server.h src/server/file_segment_auditor.cpp src/server/file_segment_auditor.h src/server/event_manager.cpp src/server/event_manager.h src/server/hardware_monitor.cpp src/server/hardware_monitor.h)
 add_executable(hfetch_server ${HFETCH_SERVER_SRC})
 target_link_libraries(hfetch_server -lmpi)
 
