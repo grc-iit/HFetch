@@ -99,10 +99,8 @@ public:
 
         return ServerStatus::SERVER_SUCCESS;
     }
-    std::vector<Event> fetchHardwareEvents(){
-
-    }
-    void stop(){
+    std::vector<Event> FetchEvents();
+    void Stop(){
         for (int i = 0; i < num_monitors; ++i) {
             /* Issue server kill signals */
             monitor__exit_signal[i].set_value();

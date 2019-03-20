@@ -2,8 +2,8 @@
 // Created by HariharanDevarajan on 2/1/2019.
 //
 
-#ifndef HERMES_PROJECT_DISTRIBUTEDMAP_H
-#define HERMES_PROJECT_DISTRIBUTEDMAP_H
+#ifndef HERMES_PROJECT_DISTRIBUTEDMULTIMAP_H
+#define HERMES_PROJECT_DISTRIBUTEDMULTIMAP_H
 
 /**
  * Include Headers
@@ -40,13 +40,13 @@
 
 
 template<typename KeyType, typename MappedType, typename Compare = std::less<KeyType>>
-class DistributedMap {
+class DistributedMultiMap {
 private:
     std::hash<KeyType> keyHash;
     /** Class Typedefs for ease of use **/
     typedef std::pair<const KeyType, MappedType> ValueType;
     typedef boost::interprocess::allocator<ValueType, boost::interprocess::managed_shared_memory::segment_manager> ShmemAllocator;
-    typedef boost::interprocess::map<KeyType, MappedType, Compare, ShmemAllocator> MyMap;
+    typedef boost::interprocess::multimap<KeyType, MappedType, Compare, ShmemAllocator> MyMap;
     /** Class attributes**/
     int comm_size, my_rank,num_servers;
     uint16_t  my_server;
@@ -61,12 +61,12 @@ private:
 public:
 
     /* Constructor to deallocate the shared memory*/
-    ~DistributedMap(){
+    ~DistributedMultiMap(){
         boost::interprocess::shared_memory_object::remove(name.c_str());
     }
 
-    explicit DistributedMap(){}
-    explicit DistributedMap(std::string name_,
+    explicit DistributedMultiMap(){}
+    explicit DistributedMultiMap(std::string name_,
                             bool is_server_,
                             uint16_t my_server_,
                             int num_servers_)
@@ -89,18 +89,17 @@ public:
             mymap = segment.construct<MyMap>(name.c_str())(Compare() ,alloc_inst);
             mutex = segment.construct<boost::interprocess::interprocess_mutex>("mtx")();
             /* Create a RPC server and map the methods to it. */
-            std::function<bool(KeyType,MappedType)> putFunc(std::bind(&DistributedMap<KeyType,MappedType,Compare>::Put, this, std::placeholders::_1 , std::placeholders::_2));
-            std::function<std::pair<bool,MappedType>(KeyType)> getFunc(std::bind(&DistributedMap<KeyType,MappedType,Compare>::Get, this, std::placeholders::_1 ));
-            std::function<std::vector<std::pair<KeyType,MappedType>>(KeyType)> containsInServerFunc(std::bind(&DistributedMap<KeyType,MappedType,Compare>::ContainsInServer, this, std::placeholders::_1 ));
-            std::function<std::pair<bool,MappedType>(KeyType)> eraseFunc(std::bind(&DistributedMap<KeyType,MappedType,Compare>::Erase, this, std::placeholders::_1 ));
-            std::function<std::vector<std::pair<KeyType,MappedType>>(void)> getAllDataInServerFunc(std::bind(&DistributedMap<KeyType,MappedType,Compare>::GetAllDataInServer, this ));
+            std::function<bool(KeyType,MappedType)> putFunc(std::bind(&DistributedMultiMap<KeyType,MappedType,Compare>::Put, this, std::placeholders::_1 , std::placeholders::_2));
+            std::function<std::pair<bool,MappedType>(KeyType)> getFunc(std::bind(&DistributedMultiMap<KeyType,MappedType,Compare>::Get, this, std::placeholders::_1 ));
+            std::function<std::vector<std::pair<KeyType,MappedType>>(KeyType)> containsInServerFunc(std::bind(&DistributedMultiMap<KeyType,MappedType,Compare>::ContainsInServer, this, std::placeholders::_1 ));
+            std::function<std::pair<bool,MappedType>(KeyType)> eraseFunc(std::bind(&DistributedMultiMap<KeyType,MappedType,Compare>::Erase, this, std::placeholders::_1 ));
+            std::function<std::vector<std::pair<KeyType,MappedType>>(void)> getAllDataInServerFunc(std::bind(&DistributedMultiMap<KeyType,MappedType,Compare>::GetAllDataInServer, this ));
             rpc->bind(func_prefix+"_Put", putFunc);
             rpc->bind(func_prefix+"_Get", getFunc);
             rpc->bind(func_prefix+"_Erase", eraseFunc);
             rpc->bind(func_prefix+"_GetAllData", getAllDataInServerFunc);
             rpc->bind(func_prefix+"_Contains", containsInServerFunc);
         }
-
         /* Map the clients to their respective memory pools */
         if(!is_server){
             segment=boost::interprocess::managed_shared_memory(boost::interprocess::open_only,name.c_str());

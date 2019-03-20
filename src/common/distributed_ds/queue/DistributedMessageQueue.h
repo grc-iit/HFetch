@@ -71,7 +71,7 @@ public:
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
         /* create per server name for shared memory. Needed if multiple servers are spawned on one node*/
         this->name += "_" + std::to_string(my_server);
-        rpc=Singleton<RPC>::GetInstance();
+        rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",is_server_,my_server_,num_servers_);
         if (is_server) {
             /* Delete existing instance of shared memory space*/
             bip::shared_memory_object::remove(name.c_str());
@@ -82,7 +82,6 @@ public:
             queue = segment.construct<Queue>("Queue")(alloc_inst);
             mutex = segment.construct<bip::interprocess_mutex>("mtx")();
             /* Create a RPC server and map the methods to it. */
-            rpc=Singleton<RPC>::GetInstance();
             std::function<bool(MappedType,uint16_t)> pushFunc(std::bind(&DistributedMessageQueue<MappedType>::Push, this, std::placeholders::_1, std::placeholders::_2));
             std::function<std::pair<bool,MappedType>(uint16_t)> popFunc(std::bind(&DistributedMessageQueue::Pop, this, std::placeholders::_1));
             std::function<size_t(uint16_t)> sizeFunc(std::bind(&DistributedMessageQueue::Size, this, std::placeholders::_1));

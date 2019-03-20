@@ -6,8 +6,14 @@
 #define HFETCH_MEMORY_CLIENT_H
 
 
-class memory_client {
+#include "io_client.h"
 
+class MemoryClient: public IOClient {
+public:
+    ServerStatus Read(PosixFile source, PosixFile destination) override;
+    ServerStatus Write(PosixFile source, PosixFile destination) override;
+
+    ServerStatus Delete(PosixFile file) override;
 };
 
 

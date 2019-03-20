@@ -6,8 +6,14 @@
 #define HFETCH_FILE_CLIENT_H
 
 
-class file_client {
+#include "io_client.h"
 
+class FileClient: public IOClient {
+public:
+    ServerStatus Read(PosixFile source, PosixFile destination) override;
+    ServerStatus Write(PosixFile source, PosixFile destination) override;
+
+    ServerStatus Delete(PosixFile file) override;
 };
 
 

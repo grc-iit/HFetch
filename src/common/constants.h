@@ -10,6 +10,8 @@
 #define HFETCH_CONSTANTS_H
 const uint16_t RPC_PORT=8080;
 const size_t MAX_STRING_LENGTH=256;
+const size_t MAX_PREFETCH_EVENTS=1;
+const double LAMDA_FOR_SCORE=0.5;
 
 
 

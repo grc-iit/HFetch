@@ -5,4 +5,23 @@
 #ifndef HFETCH_IO_CLIENT_FACTORY_H
 #define HFETCH_IO_CLIENT_FACTORY_H
 
+#include <src/common/singleton.h>
+#include "io_client.h"
+#include "file_client.h"
+#include "memory_client.h"
+
+class IOClientFactory{
+public:
+    IOClientFactory(){}
+    std::shared_ptr<IOClient> GetClient(IOClientType type){
+        switch(type){
+            case IOClientType::POSIX_FILE:{
+                return Singleton<FileClient>::GetInstance();
+            }
+            case IOClientType::SIMPLE_MEMORY:{
+                return Singleton<MemoryClient>::GetInstance();
+            }
+        }
+    }
+};
 #endif //HFETCH_IO_CLIENT_FACTORY_H
