@@ -13,6 +13,9 @@
 #include <src/common/enumerations.h>
 #include <rpc/msgpack.hpp>
 #include <math.h>
+#include <boost/interprocess/containers/string.hpp>
+
+namespace bip=boost::interprocess;
 
 /* fixed size char for better inter process communications */
 typedef struct CharStruct{
@@ -526,6 +529,58 @@ namespace clmdep_msgpack {
                         o.via.array.ptr[0] = mv1::object(input.filename, o.zone);
                         o.via.array.ptr[1] = mv1::object(input.segment, o.zone);
                         o.via.array.ptr[2] = mv1::object(input.layer.id_, o.zone);
+                    }
+                };
+
+                template <>
+                struct convert<bip::string> {
+                    clmdep_msgpack::object const& operator()(clmdep_msgpack::object const& o, bip::string& v) const {
+                        switch (o.type) {
+                            case clmdep_msgpack::type::BIN:
+                                v.assign(o.via.bin.ptr, o.via.bin.size);
+                                break;
+                            case clmdep_msgpack::type::STR:
+                                v.assign(o.via.str.ptr, o.via.str.size);
+                                break;
+                            default:
+                                throw clmdep_msgpack::type_error();
+                                break;
+                        }
+                        return o;
+                    }
+                };
+
+
+                template <>
+                struct pack<bip::string> {
+                    template <typename Stream>
+                    clmdep_msgpack::packer<Stream>& operator()(clmdep_msgpack::packer<Stream>& o, const bip::string& v) const {
+                        uint32_t size = checked_get_container_size(v.size());
+                        o.pack_str(size);
+                        o.pack_str_body(v.data(), size);
+                        return o;
+                    }
+                };
+
+                template <>
+                struct object<bip::string> {
+                    void operator()(clmdep_msgpack::object& o, const bip::string& v) const {
+                        uint32_t size = checked_get_container_size(v.size());
+                        o.type = clmdep_msgpack::type::STR;
+                        o.via.str.ptr = v.data();
+                        o.via.str.size = size;
+                    }
+                };
+
+                template <>
+                struct object_with_zone<bip::string> {
+                    void operator()(clmdep_msgpack::object::with_zone& o, const bip::string& v) const {
+                        uint32_t size = checked_get_container_size(v.size());
+                        o.type = clmdep_msgpack::type::STR;
+                        char* ptr = static_cast<char*>(o.zone.allocate_align(size, MSGPACK_ZONE_ALIGNOF(char)));
+                        o.via.str.ptr = ptr;
+                        o.via.str.size = size;
+                        std::memcpy(ptr, v.data(), v.size());
                     }
                 };
             }

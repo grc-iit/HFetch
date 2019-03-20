@@ -12,7 +12,10 @@
 
 class IOClientFactory{
 public:
-    IOClientFactory(){}
+    IOClientFactory(){
+        Singleton<FileClient>::GetInstance();
+        Singleton<MemoryClient>::GetInstance();
+    }
     std::shared_ptr<IOClient> GetClient(IOClientType type){
         switch(type){
             case IOClientType::POSIX_FILE:{
