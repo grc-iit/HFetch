@@ -30,7 +30,7 @@ class HardwareMonitor {
     ServerStatus AsyncMonitorInternal(std::future<void> futureObj, const Layer* current){
         int length, i = 0,fd,wd;
         char buffer[BUF_LEN];
-        uint32_t watch_flags = IN_CREATE | IN_MODIFY | IN_DELETE | IN_ACCESS;
+        uint32_t watch_flags = IN_OPEN | IN_CLOSE_NOWRITE | IN_ACCESS;
         inotify_add_watch(fd, current->layer_loc.c_str(), watch_flags);
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
             i = 0;
@@ -39,32 +39,30 @@ class HardwareMonitor {
             if ( length < 0 ) {
                 perror( "read" );
             }
-
             while ( i < length ) {
                 struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
                 if ( event->len ) {
-                    if ( event->mask & IN_CREATE) {
-                        if (event->mask & IN_ISDIR)
-                            printf( "The directory %s was Created.\n", event->name );
-                        else
+                    if ( event->mask & IN_OPEN) {
+                        if (!(event->mask & IN_ISDIR)){
                             printf( "The file %s was Created with WD %d\n", event->name, event->wd );
+                            Event openEvent;
+                            openEvent.filename=CharStruct(event->name);
+                        }
                     }
-
-                    if ( event->mask & IN_MODIFY) {
-                        if (event->mask & IN_ISDIR)
-                            printf( "The directory %s was modified.\n", event->name );
-                        else
-                            printf( "The file %s was modified with WD %d\n", event->name, event->wd );
+                    else if ( event->mask & IN_CLOSE_NOWRITE) {
+                        if (!(event->mask & IN_ISDIR)){
+                            printf( "The file %s was Created with WD %d\n", event->name, event->wd );
+                            Event openEvent;
+                            openEvent.filename=CharStruct(event->name);
+                        }
                     }
-
-                    if ( event->mask & IN_DELETE) {
-                        if (event->mask & IN_ISDIR)
-                            printf( "The directory %s was deleted.\n", event->name );
-                        else
-                            printf( "The file %s was deleted with WD %d\n", event->name, event->wd );
+                    else if ( event->mask & IN_ACCESS) {
+                        if (!(event->mask & IN_ISDIR)){
+                            printf( "The file %s was Created with WD %d\n", event->name, event->wd );
+                            Event openEvent;
+                            openEvent.filename=CharStruct(event->name);
+                        }
                     }
-
-
                     i += EVENT_SIZE + event->len;
                 }
             }

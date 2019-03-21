@@ -16,7 +16,7 @@
 
 namespace bip=boost::interprocess;
 typedef unsigned long long int really_long;
-class DistributedClock{
+class GlobalClock{
 private:
     typedef std::chrono::high_resolution_clock::time_point chrono_time;
     chrono_time *start;
@@ -29,10 +29,10 @@ private:
     std::string name,func_prefix;
     std::shared_ptr<RPC> rpc;
 public:
-    ~DistributedClock(){
+    ~GlobalClock(){
         if(is_server) bip::shared_memory_object::remove(name.c_str());
     }
-    DistributedClock(std::string name_,
+    GlobalClock(std::string name_,
                      bool is_server_,
                      uint16_t my_server_,
                      int num_servers_): is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
@@ -43,7 +43,7 @@ public:
         name=name+"_"+std::to_string(my_server);
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",is_server_,my_server_,num_servers_);
         if(is_server){
-            std::function<HTime(void)> getTimeFunction(std::bind(&DistributedClock::GetTime, this));
+            std::function<HTime(void)> getTimeFunction(std::bind(&GlobalClock::GetTime, this));
             rpc->bind(func_prefix+"_GetTime",getTimeFunction);
             bip::shared_memory_object::remove(name.c_str());
             segment=bip::managed_shared_memory(bip::create_only, name.c_str(), 65536);

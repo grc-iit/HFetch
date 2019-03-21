@@ -12,24 +12,26 @@
 #include <src/common/configuration_manager.h>
 #include <src/common/enumerations.h>
 #include <src/common/distributed_ds/queue/DistributedMessageQueue.h>
+#include <src/common/distributed_ds/clock/global_clock.h>
 #include <src/server/event_manager.h>
 #include <src/server/hardware_monitor.h>
+#include <src/common/util.h>
 
 class Server {
-
     std::shared_ptr<RPC> rpc;
     std::shared_ptr<EventManager> eventManager;
     std::shared_ptr<HardwareMonitor> hardwareMonitor;
+    GlobalClock clock;
 
     size_t num_workers;
     std::thread* client_server_workers,*monitor_server_workers;
     std::promise<void>* client_server_exit_signal,*monitor_server_exit_signal;
-    DistributedMessageQueue<Event> event_queue;
+    DistributedMessageQueue<Event> app_event_queue;
 
     ServerStatus runClientServerInternal(std::future<void> futureObj){
         std::vector<Event> events=std::vector<Event>();
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
-            auto result = event_queue.Pop(CONF->my_server);
+            auto result = app_event_queue.Pop(CONF->my_server);
             if(result.first){
                 events.push_back(result.second);
             }
@@ -56,7 +58,34 @@ class Server {
         return ServerStatus::SERVER_SUCCESS;
     }
 public:
-    Server(size_t num_workers_=1):num_workers(num_workers_),event_queue("APPLICATION_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers){
+    static InputArgs InitializeServer(int argc, char *argv[]){
+        InputArgs args = parse_opts(argc,argv);
+        CONF;
+        CONF->BuildLayers(args.layers,args.layer_count_);
+        CONF->ranks_per_server=args.ranks_per_server_;
+
+        CONF->is_server=true;
+        CONF->num_servers=CONF->comm_size;
+        CONF->my_server=CONF->my_rank_server;
+        CONF->UpdateServerComm();
+        return args;
+
+    }
+    static InputArgs InitializeClients(int argc, char *argv[]){
+        InputArgs args = parse_opts(argc,argv);
+        CONF;
+        CONF->BuildLayers(args.layers,args.layer_count_);
+        CONF->ranks_per_server=args.ranks_per_server_;
+
+        CONF->is_server=false;
+        CONF->num_servers=CONF->comm_size/CONF->ranks_per_server;
+        CONF->my_server=CONF->my_rank_world/CONF->ranks_per_server;
+        CONF->UpdateServerComm();
+        return args;
+    }
+    Server(size_t num_workers_=1):num_workers(num_workers_),
+    app_event_queue("APPLICATION_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
+    clock("GLOBAL_CLOCK",CONF->is_server,CONF->my_server,CONF->num_servers){
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->comm_size);
         eventManager = Singleton<EventManager>::GetInstance();
         hardwareMonitor = Singleton<HardwareMonitor>::GetInstance();
@@ -76,6 +105,11 @@ public:
             }
         }
     }
+    ServerStatus pushEvents(Event e){
+        e.time = clock.GetTimeServer(CONF->my_server);
+        app_event_queue.Push(e,CONF->my_server);
+    }
+
     void stop(){
         for (int i = 0; i < num_workers; ++i) {
             /* Issue server kill signals */

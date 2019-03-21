@@ -17,6 +17,30 @@
 
 namespace bip=boost::interprocess;
 
+/* Simplified Layer structure */
+typedef struct LayerInfo {
+    char mount_point_[256];
+    float capacity_mb_;
+    float bandwidth;
+    bool is_memory;
+    bool direct_io;
+} LayerInfo;
+
+/* Input args structure for both lib and server */
+
+typedef struct InputArgs{
+    size_t io_size_;
+    char* pfs_path;
+    int layer_count_;
+    LayerInfo* layers;
+    size_t iteration_;
+    size_t direct_io_;
+    int ranks_per_server_;
+    size_t num_workers;
+
+} InputArgs;
+
+
 /* fixed size char for better inter process communications */
 typedef struct CharStruct{
 private:
@@ -47,8 +71,8 @@ public:
 
 /* represents the file segment data structure and all its required methods */
 typedef struct Segment{
-    size_t start;
-    size_t end;
+    long start;
+    long end;
     Segment():start(0),end(0){}
     Segment(size_t start_, size_t end_):start(start_),end(end_){} /* Parameterized constructor */
     Segment(const Segment &other) : start(other.start),end(other.end) {} /* copy constructor */
@@ -84,7 +108,7 @@ typedef struct Segment{
     /**
      * Methods
      */
-     size_t GetSize() const{
+    long GetSize() const{
          return end - start + 1;
      }
     /**
@@ -391,8 +415,8 @@ namespace clmdep_msgpack {
                 template<>
                 struct convert<Segment> {
                     mv1::object const& operator()(mv1::object const& o, Segment& input) const {
-                        input.start = o.via.array.ptr[0].as<size_t>();
-                        input.end = o.via.array.ptr[1].as<size_t>();
+                        input.start = o.via.array.ptr[0].as<long>();
+                        input.end = o.via.array.ptr[1].as<long>();
                         return o;
                     }
                 };
