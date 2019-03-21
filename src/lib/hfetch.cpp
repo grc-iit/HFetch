@@ -59,10 +59,44 @@ int hfetch::fseek(FILE *fh, long int offset, int origin) {
 }
 
 size_t hfetch::fread(void *ptr, size_t size, size_t count, FILE *fh) {
+    auto mdm = Singleton<MetadataManager>::GetInstance();
+    auto server = Singleton<Server>::GetInstance();
+    auto result=mdm->GetFilename(fh);
+    if(result.first){
+        long current_offset=std::fseek(fh, 0L, SEEK_CUR);
+        std::fseek(fh, 0L, SEEK_END);
+        long file_size = std::ftell(fh);
+        std::fseek(fh, current_offset, SEEK_SET);
+        Event event;
+        event.filename=CharStruct(result.second);
+        event.segment.start=0;
+        event.segment.end=file_size;
+        event.layer_index=Layer::LAST->id_;
+        event.source=EventSource::APPLICATION;
+        event.event_type=EventType::FILE_READ;
+        server->pushEvents(event);
+    }
     return std::fread(ptr,size,count,fh);
 }
 
 size_t hfetch::fwrite(const void *ptr, size_t size, size_t count, FILE *fh) {
+    auto mdm = Singleton<MetadataManager>::GetInstance();
+    auto server = Singleton<Server>::GetInstance();
+    auto result=mdm->GetFilename(fh);
+    if(result.first){
+        long current_offset=std::fseek(fh, 0L, SEEK_CUR);
+        std::fseek(fh, 0L, SEEK_END);
+        long file_size = std::ftell(fh);
+        std::fseek(fh, current_offset, SEEK_SET);
+        Event event;
+        event.filename=CharStruct(result.second);
+        event.segment.start=0;
+        event.segment.end=file_size;
+        event.layer_index=Layer::LAST->id_;
+        event.source=EventSource::APPLICATION;
+        event.event_type=EventType::FILE_WRITE;
+        server->pushEvents(event);
+    }
     return std::fwrite(ptr,size,count,fh);
 }
 
