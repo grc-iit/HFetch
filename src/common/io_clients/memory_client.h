@@ -22,6 +22,8 @@ public:
     ServerStatus Read(PosixFile source, PosixFile destination) override;
     ServerStatus Write(PosixFile source, PosixFile destination) override;
     ServerStatus Delete(PosixFile file) override;
+
+    double GetCurrentUsage(Layer l) override;
 };
 
 

@@ -13,61 +13,51 @@
 #include <src/common/singleton.h>
 #include <src/common/macros.h>
 #include <src/common/data_structure.h>
+#include <src/common/io_clients/io_client_factory.h>
 
 class FileSegmentAuditor {
     /* filename to offset_map pointer*/
     typedef DistributedMap<Segment,std::pair<PosixFile,SegmentScore>> SegmentMap;
     std::unordered_map<CharStruct,SegmentMap*> file_segment_map;
     DistributedHashMap<CharStruct,uint32_t> file_active_status;
+    DistributedHashMap<uint8_t,std::pair<double,double>> layer_score_map;
     std::shared_ptr<RPC> rpc;
+    std::shared_ptr<IOClientFactory> ioFactory;
     const std::string FILE_SEGMENT_AUDITOR="FILE_SEGMENT_AUDITOR";
-    ServerStatus CreateOffsetMap(Event event){
-        MPI_Barrier(CONF->server_comm);
-        auto file_iter = file_segment_map.find(event.filename);
-        if(file_iter == file_segment_map.end()){
-            std::string name(event.filename.c_str());
-            SegmentMap* mapLayer = new SegmentMap(name + "_SEGEMENT",CONF->is_server,CONF->my_server,CONF->num_servers);
-            if(CONF->my_rank_server == 0){
-                SegmentScore score;
-                score.frequency=0;
-                score.time=0;
-                PosixFile file;
-                file.filename = event.filename;
-                file.segment = event.segment;
-                file.layer = Layer(event.layer_index);
-                mapLayer->Put(event.segment,std::pair<PosixFile,SegmentScore>(file,score));
-            }
-        }
-        MPI_Barrier(CONF->server_comm);
-        return ServerStatus::SERVER_SUCCESS;
-    }
-    ServerStatus SyncCreateOffsetMap(Event event){
-        for(int i=0;i<CONF->num_servers;++i){
-            if(i!=CONF->my_server){
-                rpc->call(i,FILE_SEGMENT_AUDITOR+"_CreateOffsetMap",event).template as<ServerStatus>();
-            }else{
-                CreateOffsetMap(event);
-            }
-        }
-        return ServerStatus::SERVER_SUCCESS;
-    }
 
+    ServerStatus CreateOffsetMap(Event event);
+    ServerStatus SyncCreateOffsetMap(Event event);
     ServerStatus MarkFileSegmentsActive(Event event);
-
     ServerStatus MarkFileSegmentsInactive(Event event);
-
     ServerStatus IncreaseFileSegmentFrequency(Event event);
+
 public:
-    FileSegmentAuditor():file_segment_map(),file_active_status("FILE_ACTIVE_STATUS",CONF->is_server,CONF->my_server,CONF->num_servers){
-        rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->comm_size);
+    FileSegmentAuditor():file_segment_map(),file_active_status("FILE_ACTIVE_STATUS",CONF->is_server,CONF->my_server,CONF->num_servers),
+                         layer_score_map("LAYER_SCORE_MAP",CONF->is_server,CONF->my_server,CONF->num_servers){
+        rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->num_servers);
+        ioFactory = Singleton<IOClientFactory>::GetInstance();
         if(CONF->is_server){
             std::function<ServerStatus(Event)> createOffsetMapFunc(std::bind(&FileSegmentAuditor::CreateOffsetMap, this, std::placeholders::_1));
             rpc->bind(FILE_SEGMENT_AUDITOR+"_CreateOffsetMap", createOffsetMapFunc);
         }
+        if(CONF->my_rank_server == 0){
+            Layer* current=Layer::FIRST;
+            while(current != nullptr){
+                double min_score = std::numeric_limits<double>::min();
+                double max_score = std::numeric_limits<double>::max();
+                layer_score_map.Put(current->id_, std::pair<double,double>(min_score, max_score));
+                current = current->next;
+            }
+        }
     }
+
     ServerStatus Update(std::vector<Event> events);
 
     ServerStatus UpdateOnPrefetch(PosixFile source,PosixFile destination);
+
+    std::vector<std::tuple<Segment,SegmentScore, PosixFile>> FetchHeatMap(PosixFile file);
+
+    std::map<uint8_t, std::tuple<double, double,double>> FetchLayerScores();
 
 };
 

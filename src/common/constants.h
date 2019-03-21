@@ -13,6 +13,7 @@ const size_t MAX_STRING_LENGTH=256;
 const size_t MAX_PREFETCH_EVENTS=1;
 const double LAMDA_FOR_SCORE=0.5;
 const std::string FILE_SEPARATOR="/";
+const size_t MB=1024*1024;
 
 
 

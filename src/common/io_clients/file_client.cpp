@@ -40,3 +40,17 @@ ServerStatus FileClient::Delete(PosixFile file) {
     fclose(fh);
     return SERVER_SUCCESS;
 }
+
+double FileClient::GetCurrentUsage(Layer l) {
+    std::string cmd="du -s "+std::string(l.layer_loc.c_str())+" | awk {'print$1'}";
+    FILE *fp;
+    std::array<char, 128> buffer;
+    std::string result;
+    std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get())) {
+        if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
+            result += buffer.data();
+    }
+    return std::stoll(result)-4;
+}

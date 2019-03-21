@@ -61,3 +61,12 @@ ServerStatus MemoryClient::Delete(PosixFile file) {
     }
     return SERVER_SUCCESS;
 }
+
+double MemoryClient::GetCurrentUsage(Layer l) {
+    auto datas = data_map.GetAllData();
+    double total=0.0;
+    for(auto data:datas){
+        total+=data.second.size();
+    }
+    return total;
+}
