@@ -24,19 +24,25 @@ int main(int argc, char*argv[]){
     void* buf = malloc(args.io_size_);
     char *homepath = getenv("RUN_DIR");
     char filename[256];
-    sprintf(filename, "%s/pfs/test.bat", homepath);
-
+    char* write_buf = GenerateData(args.io_size_);
+    sprintf(filename, "%s/pfs/test_%d.bat", homepath,0);
     /* prepare data to be read */
     FILE* pfh = std::fopen(filename,"w+");
-    char* write_buf = GenerateData(args.io_size_);
+    std::fwrite(write_buf,args.io_size_,1,pfh);
+    std::fclose(pfh);
+
+
+    sprintf(filename, "%s/pfs/test_%d.bat", homepath,1);
+    /* prepare data to be read */
+    pfh = std::fopen(filename,"w+");
     std::fwrite(write_buf,args.io_size_,1,pfh);
     std::fclose(pfh);
 
     /* Actual APP */
     for(int i=0;i<1024;i++){
+        sprintf(filename, "%s/pfs/test_%d.bat", homepath,i%2);
         printf("Iteration:%d\n",i);
         FILE* fh = hfetch::fopen(filename,"r");
-        hfetch::fread(buf,args.io_size_/2,1,fh);
         hfetch::fread(buf,args.io_size_/2,1,fh);
         hfetch::fclose(fh);
         usleep(1000);

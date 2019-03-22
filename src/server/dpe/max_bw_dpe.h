@@ -17,14 +17,17 @@ public:
     }
     std::vector<std::pair<PosixFile,PosixFile>> place(std::vector<Event> events) override;
 
-    std::vector<std::pair<PosixFile, PosixFile>> solve(const std::vector<std::tuple<Segment,SegmentScore, PosixFile>>* heatMap,
+    std::vector<std::pair<PosixFile, PosixFile>> solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple,
                                                        const std::map<uint8_t, std::tuple<double, double,double>>* layerScore,
-                                                       Layer* layer, size_t placed_index = 0,
-                                                       size_t used_capacity = 0);
+                                                       Layer* layer,
+                                                       size_t* used_capacities,
+                                                       long original_index=0);
 
     CharStruct GenerateBufferFilename();
 
     bool IsBetween(double score, double min_score, double max_score);
+
+    std::vector<PosixFile> Split(PosixFile segment, long d);
 };
 
 

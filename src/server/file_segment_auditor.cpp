@@ -180,7 +180,7 @@ std::map<uint8_t, std::tuple<double, double,double>> FileSegmentAuditor::FetchLa
         Layer layer(data.first);
         double remaining_capcity=layer.capacity_mb_*MB-ioFactory->GetClient(layer.io_client_type)->GetCurrentUsage(layer);
         remaining_capcity=remaining_capcity<0?0:remaining_capcity;
-        double min_score = std::numeric_limits<double>::min();
+        double min_score = -1*(std::numeric_limits<double>::max()-1);
         double max_score = std::numeric_limits<double>::max();
         if(data.second.size() > 0){
             max_score = *data.second.begin();
