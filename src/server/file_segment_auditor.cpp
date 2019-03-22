@@ -13,38 +13,15 @@ ServerStatus FileSegmentAuditor::Update(std::vector<Event> events) {
                 if(file_iter == file_segment_map.end()){
                     SyncCreateOffsetMap(event);
                 }
+                MarkFileSegmentsActive(event);
                 break;
             }
-        }
-        switch(event.source){
-            case EventSource::APPLICATION:{
-                switch(event.event_type){
-                    case EventType::FILE_OPEN:{
-                        MarkFileSegmentsActive(event);
-                        break;
-                    }
-                    case EventType::FILE_CLOSE:{
-                        MarkFileSegmentsInactive(event);
-                        break;
-                    }
-                }
+            case EventType::FILE_CLOSE:{
+                MarkFileSegmentsInactive(event);
                 break;
             }
-            case EventSource::HARDWARE:{
-                switch(event.event_type){
-                    case EventType::FILE_OPEN:{
-                        MarkFileSegmentsActive(event);
-                        break;
-                    }
-                    case EventType::FILE_CLOSE:{
-                        MarkFileSegmentsInactive(event);
-                        break;
-                    }
-                    case EventType::FILE_READ:{
-                        IncreaseFileSegmentFrequency(event);
-                        break;
-                    }
-                }
+            case EventType::FILE_READ:{
+                IncreaseFileSegmentFrequency(event);
                 break;
             }
         }
@@ -57,27 +34,34 @@ ServerStatus FileSegmentAuditor::UpdateOnPrefetch(PosixFile source,PosixFile des
     if(iter != file_segment_map.end()){
         SegmentMap* multiMapScore = iter->second;
         auto iter = multiMapScore->Get(source.segment);
-        if(iter.first){
-            iter.second.first=destination;
-            multiMapScore->Put(source.segment,iter.second);
-        }else{
-            auto allDatas = multiMapScore->Contains(source.segment);
-            for(auto elements : allDatas){
-                multiMapScore->Erase(elements.first);
-                /* retain left over scores */
-                auto left_overs = source.segment.Substract(elements.first);
-                for(auto left_over : left_overs){
-                    multiMapScore->Put(left_over,elements.second);
-                }
-                /* update intersected score */
-                auto common = source.segment.Intersect(elements.first);
-                elements.second.first = destination;
-                elements.second.first.segment.start = common.start - source.segment.start;
-                elements.second.first.segment.end = common.end - source.segment.start;
-                multiMapScore->Put(common,elements.second);
+        auto allDatas = multiMapScore->Contains(source.segment);
+        for(auto elements : allDatas){
+            multiMapScore->Erase(elements.first);
+            /* retain left over scores */
+            auto left_overs = elements.first.Substract(source.segment);
+            for(auto left_over : left_overs){
+                multiMapScore->Put(left_over,elements.second);
+            }
+            /* update intersected score */
+            auto layer_score_iter = layer_score_map.Get(elements.second.first.layer.id_);
+            if(layer_score_iter.first){
+                layer_score_iter.second.erase(elements.second.second.GetScore());
+                layer_score_map.Put(elements.second.first.layer.id_,layer_score_iter.second);
+            }
+
+            auto common = source.segment.Intersect(elements.first);
+            elements.second.first = destination;
+            elements.second.first.segment.start = common.start - source.segment.start;
+            elements.second.first.segment.end = common.end - source.segment.start;
+            multiMapScore->Put(common,elements.second);
+            layer_score_iter = layer_score_map.Get(destination.layer.id_);
+            if(layer_score_iter.first){
+                layer_score_iter.second.insert(elements.second.second.GetScore());
+                layer_score_map.Put(elements.second.first.layer.id_,layer_score_iter.second);
             }
         }
     }
+
     return SERVER_SUCCESS;
 }
 
@@ -103,46 +87,34 @@ ServerStatus FileSegmentAuditor::IncreaseFileSegmentFrequency(Event event) {
     auto iter = file_segment_map.find(event.filename);
     if(iter != file_segment_map.end()){
         SegmentMap* multiMapScore = iter->second;
-        auto iter = multiMapScore->Get(event.segment);
-        if(iter.first){
-            iter.second.second.frequency+=1;
-            iter.second.second.time+=event.time;
-            double newScore = iter.second.second.GetScore();
-            auto layer_score_iter = layer_score_map.Get(iter.second.first.layer.id_);
+        auto allDatas = multiMapScore->Contains(event.segment);
+        for(auto elements : allDatas){
+            multiMapScore->Erase(elements.first);
+            /* retain left over scores */
+            auto left_overs = elements.first.Substract(event.segment);
+            for(auto left_over : left_overs){
+                multiMapScore->Put(left_over,elements.second);
+            }
+            /* update intersected score */
+            auto common = event.segment.Intersect(elements.first);
+            elements.second.second.frequency+=1;
+            elements.second.second.lrf+=pow(.5,LAMDA_FOR_SCORE*event.time/1000000.0);
+            double newScore = elements.second.second.GetScore();
+            printf("File:%s,%ld,%ld Score:%f\n",
+                    elements.second.first.filename.c_str(),
+                    elements.second.first.segment.start,
+                   elements.second.first.segment.end,
+                   newScore);
+            auto layer_score_iter = layer_score_map.Get(elements.second.first.layer.id_);
             if(layer_score_iter.first){
-                double max_score=layer_score_iter.second.second,min_score=layer_score_iter.second.first;
-                if(layer_score_iter.second.second < newScore) max_score=newScore;
-                if(layer_score_iter.second.first > newScore) min_score=newScore;
-                layer_score_map.Put(iter.second.first.layer.id_,std::pair<double,double>(min_score,max_score));
+                layer_score_iter.second.insert(newScore);
+                layer_score_map.Put(elements.second.first.layer.id_,layer_score_iter.second);
             }else{
-                layer_score_map.Put(iter.second.first.layer.id_,std::pair<double,double>(newScore,newScore));
+                auto s=std::set<double,std::greater<double>>();
+                s.insert(newScore);
+                layer_score_map.Put(elements.second.first.layer.id_,s);
             }
-            multiMapScore->Put(event.segment,iter.second);
-        }else{
-            auto allDatas = multiMapScore->Contains(event.segment);
-            for(auto elements : allDatas){
-                multiMapScore->Erase(elements.first);
-                /* retain left over scores */
-                auto left_overs = event.segment.Substract(elements.first);
-                for(auto left_over : left_overs){
-                    multiMapScore->Put(left_over,elements.second);
-                }
-                /* update intersected score */
-                auto common = event.segment.Intersect(elements.first);
-                elements.second.second.frequency+=1;
-                elements.second.second.time+=event.time;
-                double newScore = elements.second.second.GetScore();
-                auto layer_score_iter = layer_score_map.Get(elements.second.first.layer.id_);
-                if(layer_score_iter.first){
-                    double max_score=layer_score_iter.second.second,min_score=layer_score_iter.second.first;
-                    if(layer_score_iter.second.second < newScore) max_score=newScore;
-                    if(layer_score_iter.second.first > newScore) min_score=newScore;
-                    layer_score_map.Put(elements.second.first.layer.id_,std::pair<double,double>(min_score,max_score));
-                }else{
-                    layer_score_map.Put(elements.second.first.layer.id_,std::pair<double,double>(newScore,newScore));
-                }
-                multiMapScore->Put(common,elements.second);
-            }
+            multiMapScore->Put(common,elements.second);
         }
     }
     return SERVER_SUCCESS;
@@ -157,13 +129,14 @@ ServerStatus FileSegmentAuditor::CreateOffsetMap(Event event) {
         if(CONF->my_rank_server == 0){
             SegmentScore score;
             score.frequency=0;
-            score.time=0;
+            score.lrf=0;
             PosixFile file;
             file.filename = event.filename;
             file.segment = event.segment;
             file.layer = Layer(event.layer_index);
             mapLayer->Put(event.segment,std::pair<PosixFile,SegmentScore>(file,score));
         }
+        file_segment_map.emplace(event.filename,mapLayer);
     }
     MPI_Barrier(CONF->server_comm);
     return ServerStatus::SERVER_SUCCESS;
@@ -207,7 +180,41 @@ std::map<uint8_t, std::tuple<double, double,double>> FileSegmentAuditor::FetchLa
         Layer layer(data.first);
         double remaining_capcity=layer.capacity_mb_*MB-ioFactory->GetClient(layer.io_client_type)->GetCurrentUsage(layer);
         remaining_capcity=remaining_capcity<0?0:remaining_capcity;
-        return_map.emplace(data.first,std::tuple<double, double,double>(data.second.first,data.second.second,remaining_capcity));
+        double min_score = std::numeric_limits<double>::min();
+        double max_score = std::numeric_limits<double>::max();
+        if(data.second.size() > 0){
+            max_score = *data.second.begin();
+            min_score = *data.second.begin();
+        }
+        if(data.second.size() > 1) min_score = *data.second.rbegin();
+        return_map.emplace(data.first,std::tuple<double, double,double>(min_score,max_score,remaining_capcity));
     }
     return return_map;
+}
+
+std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocation(PosixFile file) {
+    std::vector<std::pair<PosixFile, PosixFile>> values = std::vector<std::pair<PosixFile, PosixFile>>();
+    auto iter = file_segment_map.find(file.filename);
+    long original_start=0;
+    if(iter != file_segment_map.end()){
+        SegmentMap* map = iter->second;
+        auto allData = map->Contains(file.segment);
+        for(auto data:allData){
+            /* update intersected score */
+            auto common = file.segment.Intersect(data.first);
+            PosixFile source = data.second.first;
+            source.segment.start = common.start - data.first.start;
+            source.segment.end = common.end - data.first.start;
+            PosixFile destination = data.second.first;
+            destination.segment.start = original_start;
+            destination.segment.end = original_start + common.end - common.start;
+            original_start += common.end - common.start;
+            values.push_back(std::pair<PosixFile, PosixFile>(source,destination));
+        }
+    }
+    return values;
+}
+
+std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocationServer(PosixFile file,uint16_t server) {
+    return rpc->call(server,FILE_SEGMENT_AUDITOR+"_GetDataLocation",file).template as<std::vector<std::pair<PosixFile, PosixFile>>>();;
 }

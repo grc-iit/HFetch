@@ -20,7 +20,7 @@ class FileSegmentAuditor {
     typedef DistributedMap<Segment,std::pair<PosixFile,SegmentScore>> SegmentMap;
     std::unordered_map<CharStruct,SegmentMap*> file_segment_map;
     DistributedHashMap<CharStruct,uint32_t> file_active_status;
-    DistributedHashMap<uint8_t,std::pair<double,double>> layer_score_map;
+    DistributedHashMap<uint8_t,std::set<double,std::greater<double>>> layer_score_map;
     std::shared_ptr<RPC> rpc;
     std::shared_ptr<IOClientFactory> ioFactory;
     const std::string FILE_SEGMENT_AUDITOR="FILE_SEGMENT_AUDITOR";
@@ -38,17 +38,19 @@ public:
         ioFactory = Singleton<IOClientFactory>::GetInstance();
         if(CONF->is_server){
             std::function<ServerStatus(Event)> createOffsetMapFunc(std::bind(&FileSegmentAuditor::CreateOffsetMap, this, std::placeholders::_1));
+            std::function<std::vector<std::pair<PosixFile,PosixFile>>(PosixFile)> getDataLocationFunc(std::bind(&FileSegmentAuditor::GetDataLocation, this, std::placeholders::_1));
             rpc->bind(FILE_SEGMENT_AUDITOR+"_CreateOffsetMap", createOffsetMapFunc);
-        }
-        if(CONF->my_rank_server == 0){
-            Layer* current=Layer::FIRST;
-            while(current != nullptr){
-                double min_score = std::numeric_limits<double>::min();
-                double max_score = std::numeric_limits<double>::max();
-                layer_score_map.Put(current->id_, std::pair<double,double>(min_score, max_score));
-                current = current->next;
+            rpc->bind(FILE_SEGMENT_AUDITOR+"_GetDataLocation", getDataLocationFunc);
+            if(CONF->my_rank_server == 0){
+                Layer* current=Layer::FIRST;
+                while(current != nullptr){
+                    std::set<double,std::greater<double>> s=std::set<double,std::greater<double>>();
+                    layer_score_map.Put(current->id_, s);
+                    current = current->next;
+                }
             }
         }
+
     }
 
     ServerStatus Update(std::vector<Event> events);
@@ -58,6 +60,10 @@ public:
     std::vector<std::tuple<Segment,SegmentScore, PosixFile>> FetchHeatMap(PosixFile file);
 
     std::map<uint8_t, std::tuple<double, double,double>> FetchLayerScores();
+
+    std::vector<std::pair<PosixFile,PosixFile>> GetDataLocation(PosixFile file);
+
+    std::vector<std::pair<PosixFile,PosixFile>> GetDataLocationServer(PosixFile file,uint16_t server);
 
 };
 

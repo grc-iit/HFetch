@@ -64,12 +64,13 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
     tfnd = 0;
     flags = 0;
     struct InputArgs args;
-    args.io_size_=0;
+    args.io_size_=1024*1024;
     args.layer_count_=0;
-    args.pfs_path=NULL;
+    args.pfs_path;
     args.iteration_=1;
     args.direct_io_=true;
     args.ranks_per_server_=1;
+    args.num_workers=1;
     while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:")) != -1)
     {
         switch (opt)
@@ -104,7 +105,7 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
                 break;
             }
             case 'f':{
-                args.pfs_path= optarg;
+                strcpy(args.pfs_path,optarg);
                 break;
             }
             case 'd':{
@@ -119,6 +120,29 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
                 fprintf (stderr, "Usage: %s [-l layer_count;l(i)_capacity_mb-l(i)_bandwidth-l(i)_is_memory-l(i)_mount_point] [-i io_size_per_request]  [-f pfs_path] [-d direct io true/false] [-n request repetition] [-r ranks_per_server] [-w num_workers]\n", argv[0]);
                 exit (EXIT_FAILURE);
         }
+    }
+    if(args.layer_count_ == 0){
+        char *homepath = getenv("RUN_DIR");
+        LayerInfo* layers=new LayerInfo[4];
+        sprintf(layers[0].mount_point_, "%s/ramfs/", homepath);
+        layers[0].capacity_mb_ = 1024;
+        layers[0].bandwidth = 80000;
+        layers[0].is_memory = true;
+        sprintf(layers[1].mount_point_, "%s/nvme/", homepath);
+        layers[1].capacity_mb_ = 2 * 1024;
+        layers[1].bandwidth = 2000;
+        layers[1].is_memory = false;
+        sprintf(layers[2].mount_point_, "%s/bb/", homepath);
+        layers[2].capacity_mb_ = 4 * 1024;
+        layers[2].bandwidth = 400;
+        layers[2].is_memory = false;
+        sprintf(layers[3].mount_point_, "%s/pfs/", homepath);
+        layers[3].capacity_mb_ = 8 * 1024;
+        layers[3].bandwidth = 100;
+        layers[3].is_memory = false;
+        args.layers=layers;
+        args.layer_count_=4;
+        sprintf(args.pfs_path, "%s", layers[3].mount_point_);
     }
     return args;
 }

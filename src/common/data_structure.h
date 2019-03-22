@@ -30,7 +30,7 @@ typedef struct LayerInfo {
 
 typedef struct InputArgs{
     size_t io_size_;
-    char* pfs_path;
+    char pfs_path[256];
     int layer_count_;
     LayerInfo* layers;
     size_t iteration_;
@@ -171,17 +171,27 @@ typedef struct Segment{
 
 typedef struct SegmentScore{
     size_t frequency;
-    HTime time;
-    SegmentScore():frequency(),time(){}
-    SegmentScore(const SegmentScore &other) : frequency(other.frequency),time(other.time){} /* copy constructor */
-    SegmentScore(SegmentScore &&other) : frequency(other.frequency),time(other.time){} /* move constructor*/
+    double lrf;
+    ScoreType type;
+    SegmentScore():frequency(),lrf(),type(DEFAULT_SCORE_TYPE){}
+    SegmentScore(const SegmentScore &other) : frequency(other.frequency),lrf(other.lrf),type(other.type){} /* copy constructor */
+    SegmentScore(SegmentScore &&other) : frequency(other.frequency),lrf(other.lrf),type(other.type){} /* move constructor*/
     double GetScore() const{
-        return pow(0.5, LAMDA_FOR_SCORE * time);
+        switch (type){
+            case ScoreType ::FREQUENCY_SCORE:{
+                return frequency;
+            }
+            case ScoreType ::LRF_SCORE:{
+                return lrf;
+            }
+        }
+        return frequency;//pow(0.5, (LAMDA_FOR_SCORE * time/1000.0));
     }
     /* Assignment Operator */
     SegmentScore &operator=(const SegmentScore &other) {
         frequency=other.frequency;
-        time=other.time;
+        lrf=other.lrf;
+        type=other.type;
         return *this;
     }
     /* less than operator for comparing two SegmentScore. */
@@ -361,7 +371,7 @@ namespace std {
     struct hash<SegmentScore> {
         size_t operator()(const SegmentScore &k) const {
             size_t hash_val = hash<size_t >()(k.frequency);
-            hash_val ^= hash<HTime>()(k.time);
+            hash_val ^= hash<HTime>()(k.lrf);
             return hash_val;
         }
     };
@@ -448,7 +458,7 @@ namespace clmdep_msgpack {
                 struct convert<SegmentScore> {
                     mv1::object const& operator()(mv1::object const& o, SegmentScore& input) const {
                         input.frequency = o.via.array.ptr[0].as<size_t>();
-                        input.time = o.via.array.ptr[1].as<HTime>();
+                        input.lrf = o.via.array.ptr[1].as<HTime>();
                         return o;
                     }
                 };
@@ -460,7 +470,7 @@ namespace clmdep_msgpack {
                         // packing member variables as an array.
                         o.pack_array(2);
                         o.pack(input.frequency);
-                        o.pack(input.time);
+                        o.pack(input.lrf);
                         return o;
                     }
                 };
@@ -472,7 +482,7 @@ namespace clmdep_msgpack {
                         o.via.array.size = 2;
                         o.via.array.ptr = static_cast<clmdep_msgpack::object*>(o.zone.allocate_align(sizeof(mv1::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(mv1::object)));
                         o.via.array.ptr[0] = mv1::object(input.frequency, o.zone);
-                        o.via.array.ptr[1] = mv1::object(input.time, o.zone);
+                        o.via.array.ptr[1] = mv1::object(input.lrf, o.zone);
                     }
                 };
 

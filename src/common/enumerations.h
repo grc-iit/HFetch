@@ -24,6 +24,11 @@ typedef enum EventType{
     FILE_WRITE=3
 } EventType;
 
+typedef enum ScoreType{
+    FREQUENCY_SCORE=0,
+    LRF_SCORE=1
+};
+
 /* Enumerates Event Source */
 typedef enum EventSource{
     APPLICATION=0,

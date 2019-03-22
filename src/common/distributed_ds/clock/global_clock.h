@@ -39,7 +39,6 @@ public:
               comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(),func_prefix(name_){
         MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
-        is_server=my_rank%comm_size==0;
         name=name+"_"+std::to_string(my_server);
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",is_server_,my_server_,num_servers_);
         if(is_server){

@@ -9,8 +9,8 @@ include_directories(external/rpclib/dependencies/include)
 set(INSTALL_DIR $ENV{INSTALL_DIR})
 message(INFO " INSTALL_DIR ${INSTALL_DIR}")
 
-set(LIB_FLAGS -lmpi -lrpc -lpthread -lrt -lboost_filesystem )
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INSTALL_DIR}/include/ -L${INSTALL_DIR}/lib/ -L${CMAKE_BINARY_DIR}/ -L${CMAKE_BINARY_DIR}/external/rpclib/")
+set(LIB_FLAGS -L${CMAKE_BINARY_DIR}/external/rpclib/ -lrpc  -L${INSTALL_DIR}/lib/ -lmpi -lpthread -lrt -lboost_filesystem )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INSTALL_DIR}/include/  -L${CMAKE_BINARY_DIR}/ -w")
 include_directories(${INSTALL_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR})
@@ -73,6 +73,7 @@ set(HFETCH_SERVER_SRC   ${HFETCH_SRC}
 )
 
 add_executable(hfetch_server ${HFETCH_SERVER_SRC})
+set_target_properties(hfetch_server PROPERTIES ENV TEST_ENV="LD_PRELOAD=-L${CMAKE_BINARY_DIR}/external/rpclib/librpc.so")
 add_dependencies(hfetch_server rpc)
 target_link_libraries(hfetch_server ${LIB_FLAGS})
 

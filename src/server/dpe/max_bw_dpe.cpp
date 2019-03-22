@@ -47,6 +47,7 @@ MaxBandwidthDPE::solve( const std::vector<std::tuple<Segment,SegmentScore, Posix
             if(current_file.layer != *layer){
                 PosixFile source = current_file;
                 PosixFile destination = source;
+                destination.layer=*layer;
                 if(current_file.layer == *Layer::LAST) destination.filename = GenerateBufferFilename();
                 final_vector.push_back(std::pair<PosixFile, PosixFile>(source,destination));
                 used_capacity += segment.GetSize();
@@ -68,7 +69,7 @@ MaxBandwidthDPE::solve( const std::vector<std::tuple<Segment,SegmentScore, Posix
             }
         }
     }
-    return std::vector<std::pair<PosixFile, PosixFile>>();
+    return final_vector;
 }
 
 bool MaxBandwidthDPE::IsBetween(double score, double min_score, double max_score) {

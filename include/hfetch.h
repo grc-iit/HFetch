@@ -4,7 +4,6 @@
 
 #ifndef HFETCH_HFETCH_H
 #define HFETCH_HFETCH_H
-
 #include <cstdio>
 #include <src/common/data_structure.h>
 

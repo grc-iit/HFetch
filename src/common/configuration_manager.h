@@ -7,18 +7,20 @@
 
 
 #include <cstdio>
+#include <mpi.h>
+#include "data_structure.h"
 
 class ConfigurationManager {
 public:
     int num_servers,my_rank_world,comm_size,my_rank_server;
     MPI_Comm server_comm;
     bool is_server;
-    int ranks_per_server;
+    int ranks_per_server,num_workers;
     uint16_t my_server;
     DataPlacementEngineType dpeType;
 
     ConfigurationManager():
-    num_servers(1),is_server(false),ranks_per_server(1),my_server(0),my_rank_server(0),
+    num_servers(1),is_server(false),ranks_per_server(1),my_server(0),my_rank_server(0),num_workers(1),
     dpeType(DataPlacementEngineType::MAX_BW),server_comm(){
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_world);
@@ -48,6 +50,7 @@ public:
             }
             previous_layer=current_layer;
         }
+        delete(layers);
         Layer::LAST=previous_layer;
     }
 };

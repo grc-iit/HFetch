@@ -115,16 +115,13 @@ public:
             } else {
                 segment = bip::managed_shared_memory(bip::open_only, name.c_str());
                 std::pair<MyVector *, bip::managed_shared_memory::size_type> res;
-                res = segment.find<MyVector>(name.c_str());
+                res = segment.find<MyVector>("MyVector");
                 server_list = res.first;
             }
             /* Create server list from the broadcast list*/
             isInitialized=true;
             MPI_Barrier(MPI_COMM_WORLD);
         }
-    }
-    void Init(){
-
     }
     template <typename F> void bind(std::string str, F func){
         server->bind(str,func);

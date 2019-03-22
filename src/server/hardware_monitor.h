@@ -28,9 +28,10 @@ class HardwareMonitor {
     std::promise<void>* monitor__exit_signal;
     DistributedMessageQueue<Event> event_queue;
     ServerStatus AsyncMonitorInternal(std::future<void> futureObj, const Layer* current){
+        pthread_setname_np(pthread_self(), std::to_string(current->id_).c_str());
         int length, i = 0,fd,wd;
         char buffer[BUF_LEN];
-        uint32_t watch_flags = IN_OPEN | IN_CLOSE_NOWRITE | IN_ACCESS;
+        uint32_t watch_flags = IN_ALL_EVENTS;
         inotify_add_watch(fd, current->layer_loc.c_str(), watch_flags);
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
             i = 0;
@@ -62,6 +63,8 @@ class HardwareMonitor {
                             Event openEvent;
                             openEvent.filename=CharStruct(event->name);
                         }
+                    }else{
+                        printf( "Unknown Event created The file %s was Created with WD %d\n", event->name, event->wd );
                     }
                     i += EVENT_SIZE + event->len;
                 }
@@ -91,8 +94,10 @@ public:
             if(current->io_client_type == IOClientType::POSIX_FILE){
                 std::future<void> futureObj = monitor__exit_signal[i].get_future();
                 monitor_threads[i]=std::thread (&HardwareMonitor::AsyncMonitorInternal, this, std::move(futureObj),current);
+                ++i;
             }
             current=current->next;
+
         }
 
         return ServerStatus::SERVER_SUCCESS;

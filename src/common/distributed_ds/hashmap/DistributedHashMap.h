@@ -48,7 +48,7 @@ typedef unsigned long long int really_long;
     template<typename KeyType, typename MappedType>
     class DistributedHashMap {
     private:
-        boost::hash<KeyType> keyHash;
+        std::hash<KeyType> keyHash;
         /** Class Typedefs for ease of use **/
         typedef std::pair<const KeyType, MappedType> ValueType;
         typedef boost::interprocess::allocator<ValueType, boost::interprocess::managed_shared_memory::segment_manager> ShmemAllocator;

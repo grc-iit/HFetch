@@ -20,6 +20,7 @@
 class Server {
     std::shared_ptr<RPC> rpc;
     std::shared_ptr<EventManager> eventManager;
+    std::shared_ptr<FileSegmentAuditor> auditor;
     std::shared_ptr<HardwareMonitor> hardwareMonitor;
     GlobalClock clock;
 
@@ -29,6 +30,8 @@ class Server {
     DistributedMessageQueue<Event> app_event_queue;
 
     ServerStatus runClientServerInternal(std::future<void> futureObj){
+        std::string name="client_thread";
+        pthread_setname_np(pthread_self(), name.c_str());
         std::vector<Event> events=std::vector<Event>();
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
             auto result = app_event_queue.Pop(CONF->my_server);
@@ -43,7 +46,10 @@ class Server {
         }
         return ServerStatus::SERVER_SUCCESS;
     }
+
     ServerStatus runMonitorServerInternal(std::future<void> futureObj){
+        std::string name="monitor_thread";
+        pthread_setname_np(pthread_self(), name.c_str());
         hardwareMonitor->AsyncMonitor();
         std::vector<Event> total_events=std::vector<Event>();
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
@@ -63,7 +69,7 @@ public:
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
         CONF->ranks_per_server=args.ranks_per_server_;
-
+        CONF->num_workers=args.num_workers;
         CONF->is_server=true;
         CONF->num_servers=CONF->comm_size;
         CONF->my_server=CONF->my_rank_server;
@@ -71,25 +77,36 @@ public:
         return args;
 
     }
+
     static InputArgs InitializeClients(int argc, char *argv[]){
         InputArgs args = parse_opts(argc,argv);
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
         CONF->ranks_per_server=args.ranks_per_server_;
-
+        CONF->num_workers=args.num_workers;
         CONF->is_server=false;
         CONF->num_servers=CONF->comm_size/CONF->ranks_per_server;
         CONF->my_server=CONF->my_rank_world/CONF->ranks_per_server;
         CONF->UpdateServerComm();
+        Singleton<Server>::GetInstance();
+        Singleton<IOClientFactory>::GetInstance();
         return args;
     }
+
     Server(size_t num_workers_=1):num_workers(num_workers_),
     app_event_queue("APPLICATION_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
     clock("GLOBAL_CLOCK",CONF->is_server,CONF->my_server,CONF->num_servers){
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->comm_size);
-        eventManager = Singleton<EventManager>::GetInstance();
-        hardwareMonitor = Singleton<HardwareMonitor>::GetInstance();
+        if(CONF->is_server){
+            eventManager = Singleton<EventManager>::GetInstance();
+            hardwareMonitor = Singleton<HardwareMonitor>::GetInstance();
+        }
+        auditor = Singleton<FileSegmentAuditor>::GetInstance();
+        if(CONF->is_server) {
+            rpc->run(CONF->num_workers);
+        }
     }
+
     ServerStatus async_run(size_t numWorker=1){
         num_workers=numWorker;
         if(numWorker > 0){
@@ -101,10 +118,15 @@ public:
                 std::future<void> futureObj = client_server_exit_signal[i].get_future();
                 client_server_workers[i]=std::thread (&Server::runClientServerInternal, this, std::move(futureObj));
                 std::future<void> futureObj2 = monitor_server_exit_signal[i].get_future();
-                monitor_server_workers[i]=std::thread (&Server::runMonitorServerInternal, this, std::move(futureObj));
+                monitor_server_workers[i]=std::thread (&Server::runMonitorServerInternal, this, std::move(futureObj2));
             }
         }
     }
+
+    std::vector<std::pair<PosixFile,PosixFile>> GetDataLocation(PosixFile file){
+        return auditor->GetDataLocationServer(file,CONF->my_server);
+    }
+
     ServerStatus pushEvents(Event e){
         e.time = clock.GetTimeServer(CONF->my_server);
         app_event_queue.Push(e,CONF->my_server);
