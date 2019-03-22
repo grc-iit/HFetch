@@ -40,7 +40,7 @@ int main(int argc, char*argv[]){
 
     /* Actual APP */
     for(int i=0;i<1024;i++){
-        sprintf(filename, "%s/pfs/test_%d.bat", homepath,i%2);
+        sprintf(filename, "%s/pfs/test_%d.bat", homepath,i%1);
         printf("Iteration:%d\n",i);
         FILE* fh = hfetch::fopen(filename,"r");
         hfetch::fread(buf,args.io_size_/2,1,fh);
