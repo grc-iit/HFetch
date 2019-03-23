@@ -50,7 +50,7 @@ int main(int argc, char*argv[]){
         int index=i%2;
         printf("Iteration:%d\n",i);
         hfetch::fread(buf,args.io_size_/2,1,fh[index]);
-        usleep(1000);
+        usleep(10000);
     }
     hfetch::fclose(fh[0]);
     hfetch::fclose(fh[1]);
