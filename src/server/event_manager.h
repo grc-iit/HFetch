@@ -19,8 +19,10 @@ class EventManager {
     std::shared_ptr<FileSegmentAuditor> auditor;
     std::shared_ptr<DPE> dpe;
     std::shared_ptr<DataManager> dataManager;
+    std::shared_ptr<IOClientFactory> ioFactory;
 public:
     EventManager(){
+        ioFactory = Singleton<IOClientFactory>::GetInstance();
         auditor = Singleton<FileSegmentAuditor>::GetInstance();
         dpe = Singleton<DPEFactory>::GetInstance()->GetEngine(CONF->dpeType);
         dataManager = Singleton<DataManager>::GetInstance();

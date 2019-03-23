@@ -9,16 +9,17 @@ std::vector<std::tuple<PosixFile, PosixFile,double>> MaxBandwidthDPE::place(std:
     auto layerScore = fileSegmentAuditor->FetchLayerScores();
     auto total_placements = std::vector<std::tuple<PosixFile, PosixFile,double>>();
     for(auto event:events){
-        PosixFile file;
-        file.filename=event.filename;
-        file.segment=event.segment;
-        file.layer=Layer(event.layer_index);
-        auto heatMap = fileSegmentAuditor->FetchHeatMap(file);
-        for(auto segment_tuple:heatMap){
-            auto placements = solve(segment_tuple,&layerScore,Layer::FIRST);
-            total_placements.insert(total_placements.end(),placements.begin(),placements.end());
+        if(event.event_type!=EventType::FILE_CLOSE){
+            PosixFile file;
+            file.filename=event.filename;
+            file.segment=event.segment;
+            file.layer=Layer(event.layer_index);
+            auto heatMap = fileSegmentAuditor->FetchHeatMap(file);
+            for(auto segment_tuple:heatMap){
+                auto placements = solve(segment_tuple,&layerScore,Layer::FIRST);
+                total_placements.insert(total_placements.end(),placements.begin(),placements.end());
+            }
         }
-
     }
     return total_placements;
 }

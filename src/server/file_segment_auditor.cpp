@@ -224,3 +224,11 @@ std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocation
 std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocationServer(PosixFile file,uint16_t server) {
     return rpc->call(server,FILE_SEGMENT_AUDITOR+"_GetDataLocation",file).template as<std::vector<std::pair<PosixFile, PosixFile>>>();;
 }
+
+bool FileSegmentAuditor::CheckIfFileActive(PosixFile file) {
+    auto iter = file_active_status.Get(file.filename);
+    if(iter.first){
+        return iter.second != 0;
+    }
+    return false;
+}

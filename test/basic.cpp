@@ -41,14 +41,19 @@ int main(int argc, char*argv[]){
     std::fclose(pfh);
 
     /* Actual APP */
-    for(int i=0;i<2;i++){
-        sprintf(filename, "%s/pfs/test_%d.bat", homepath,i%2);
+    FILE** fh=new FILE*[2];
+    sprintf(filename, "%s/pfs/test_%d.bat", homepath,0);
+    fh[0] = hfetch::fopen(filename,"r");
+    sprintf(filename, "%s/pfs/test_%d.bat", homepath,1);
+    fh[1] = hfetch::fopen(filename,"r");
+    for(int i=0;i<8;i++){
+        int index=i%2;
         printf("Iteration:%d\n",i);
-        FILE* fh = hfetch::fopen(filename,"r");
-        hfetch::fread(buf,args.io_size_/2,1,fh);
-        hfetch::fclose(fh);
+        hfetch::fread(buf,args.io_size_/2,1,fh[index]);
         usleep(1000);
     }
+    hfetch::fclose(fh[0]);
+    hfetch::fclose(fh[1]);
     free(buf);
     hfetch::MPI_Finalize();
     //clean_env(args);

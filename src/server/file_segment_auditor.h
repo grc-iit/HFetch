@@ -64,6 +64,8 @@ public:
 
     std::vector<std::pair<PosixFile,PosixFile>> GetDataLocationServer(PosixFile file,uint16_t server);
 
+    bool CheckIfFileActive(PosixFile file);
+
 };
 
 
