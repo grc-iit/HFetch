@@ -50,7 +50,7 @@ public:
             }
             previous_layer=current_layer;
         }
-        delete(layers);
+        //delete(layers);
         Layer::LAST=previous_layer;
     }
 };

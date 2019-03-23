@@ -4,6 +4,7 @@
 
 #include "event_manager.h"
 
+
 ServerStatus EventManager::handle(std::vector<Event> events) {
     auditor->Update(events);
     auto placements = dpe->place(events);

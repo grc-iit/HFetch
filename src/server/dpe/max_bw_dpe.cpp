@@ -66,7 +66,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
             destination.segment.end = source.GetSize() - 1;
             source.segment.start = original_index;
             source.segment.end = original_index + source.GetSize() - 1;
-            original_index = original_index + source.GetSize()  - 1;
+            original_index = source.segment.end + 1;
             final_vector.push_back(std::tuple<PosixFile, PosixFile,double>(source,destination,score));
         }
     }else if(IsAllowed(score, layer_min_score, layer_max_score)){
@@ -97,7 +97,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
                 destination.segment.end = source.GetSize() - 1;
                 source.segment.start = original_index;
                 source.segment.end = original_index + source.GetSize() - 1;
-                original_index = original_index + source.GetSize() - 1;
+                original_index = source.segment.end + 1;
                 final_vector.push_back(std::tuple<PosixFile, PosixFile,double>(source,destination,score));
             }else{
                 /* case 2 */
@@ -110,7 +110,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
                     destination.segment.end = source.GetSize() - 1;
                     source.segment.start = original_index;
                     source.segment.end = original_index + source.GetSize() - 1;
-                    original_index = original_index + source.GetSize() - 1;
+                    original_index = source.segment.end + 1;
                     if(current_file.layer == *Layer::LAST) destination.filename = GenerateBufferFilename();
                     final_vector.push_back(std::tuple<PosixFile, PosixFile,double>(source,destination,score));
                 }

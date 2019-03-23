@@ -22,7 +22,7 @@ char* GenerateData(long size){
 
 int main(int argc, char*argv[]){
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
-    setup_env(args);
+    //setup_env(args);
     void* buf = malloc(args.io_size_);
     char *homepath = getenv("RUN_DIR");
     char filename[256];
@@ -51,6 +51,6 @@ int main(int argc, char*argv[]){
     }
     free(buf);
     hfetch::MPI_Finalize();
-    clean_env(args);
+    //clean_env(args);
     return 0;
 }

@@ -32,7 +32,7 @@ static void setup_env(struct InputArgs args){
         int i;
         for(i=0;i<args.layer_count_;++i){
             char cmd1[256];
-            sprintf(cmd1,"rm -rf %s/*",args.layers[i].mount_point_);
+            sprintf(cmd1,"rm %s/*",args.layers[i].mount_point_);
             run_command(cmd1);
             char cmd2[256];
             sprintf(cmd2,"mkdir -p %s/",args.layers[i].mount_point_);
@@ -52,7 +52,7 @@ static void clean_env(struct InputArgs args){
         int i;
         for(i=0;i<args.layer_count_;++i){
             char cmd[256];
-            sprintf(cmd,"rm -rf %s/*",args.layers[i].mount_point_);
+            sprintf(cmd,"rm %s/*",args.layers[i].mount_point_);
             run_command(cmd);
         }
     }
