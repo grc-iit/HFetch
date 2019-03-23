@@ -11,21 +11,22 @@
 
 class MaxBandwidthDPE: public DPE {
     std::shared_ptr<FileSegmentAuditor> fileSegmentAuditor;
+    std::shared_ptr<IOClientFactory> ioFactory;
 public:
     MaxBandwidthDPE(){
         fileSegmentAuditor = Singleton<FileSegmentAuditor>::GetInstance();
+        ioFactory = Singleton<IOClientFactory>::GetInstance();
     }
-    std::vector<std::pair<PosixFile,PosixFile>> place(std::vector<Event> events) override;
+    std::vector<std::tuple<PosixFile, PosixFile,double>> place(std::vector<Event> events) override;
 
-    std::vector<std::pair<PosixFile, PosixFile>> solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple,
-                                                       const std::map<uint8_t, std::tuple<double, double,double>>* layerScore,
+    std::vector<std::tuple<PosixFile, PosixFile,double>> solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple,
+                                                       const std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>>* layerScore,
                                                        Layer* layer,
-                                                       size_t* used_capacities,
                                                        long original_index=0);
 
     CharStruct GenerateBufferFilename();
 
-    bool IsBetween(double score, double min_score, double max_score);
+    bool IsAllowed(double score, double min_score, double max_score);
 
     std::vector<PosixFile> Split(PosixFile segment, long d);
 };

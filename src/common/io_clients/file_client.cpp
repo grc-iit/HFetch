@@ -15,7 +15,10 @@ ServerStatus FileClient::Read(PosixFile source, PosixFile destination) {
 
 ServerStatus FileClient::Write(PosixFile source, PosixFile destination) {
     std::string file_path=std::string(destination.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(destination.filename.c_str());
-    FILE* fh = fopen(file_path.c_str(),"w");
+    FILE* fh = fopen(file_path.c_str(),"r+");
+    if(fh==NULL){
+        fh = fopen(file_path.c_str(),"w+");
+    }
     fseek(fh,destination.segment.start,SEEK_SET);
     fread(source.data,destination.segment.end-destination.segment.start, 1,fh);
     fclose(fh);

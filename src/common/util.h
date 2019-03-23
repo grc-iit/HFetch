@@ -125,15 +125,15 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
         char *homepath = getenv("RUN_DIR");
         LayerInfo* layers=new LayerInfo[4];
         sprintf(layers[0].mount_point_, "%s/ramfs/", homepath);
-        layers[0].capacity_mb_ = args.io_size_/MB/4;
+        layers[0].capacity_mb_ = 4*args.io_size_/MB/16;
         layers[0].bandwidth = 80000;
         layers[0].is_memory = true;
         sprintf(layers[1].mount_point_, "%s/nvme/", homepath);
-        layers[1].capacity_mb_ = args.io_size_/MB/4;
+        layers[1].capacity_mb_ = 4*args.io_size_/MB/16;
         layers[1].bandwidth = 2000;
         layers[1].is_memory = false;
         sprintf(layers[2].mount_point_, "%s/bb/", homepath);
-        layers[2].capacity_mb_ = args.io_size_/MB/2;
+        layers[2].capacity_mb_ = 8*args.io_size_/MB/16;
         layers[2].bandwidth = 400;
         layers[2].is_memory = false;
         sprintf(layers[3].mount_point_, "%s/pfs/", homepath);

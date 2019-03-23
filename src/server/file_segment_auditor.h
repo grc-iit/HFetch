@@ -20,7 +20,7 @@ class FileSegmentAuditor {
     typedef DistributedMap<Segment,std::pair<PosixFile,SegmentScore>> SegmentMap;
     std::unordered_map<CharStruct,SegmentMap*> file_segment_map;
     DistributedHashMap<CharStruct,uint32_t> file_active_status;
-    DistributedHashMap<uint8_t,std::set<double,std::greater<double>>> layer_score_map;
+    DistributedHashMap<uint8_t,std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>> layer_score_map;
     std::shared_ptr<RPC> rpc;
     std::shared_ptr<IOClientFactory> ioFactory;
     const std::string FILE_SEGMENT_AUDITOR="FILE_SEGMENT_AUDITOR";
@@ -44,8 +44,7 @@ public:
             if(CONF->my_rank_server == 0){
                 Layer* current=Layer::FIRST;
                 while(current != nullptr){
-                    std::set<double,std::greater<double>> s=std::set<double,std::greater<double>>();
-                    layer_score_map.Put(current->id_, s);
+                    layer_score_map.Put(current->id_, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>());
                     current = current->next;
                 }
             }
@@ -55,11 +54,11 @@ public:
 
     ServerStatus Update(std::vector<Event> events);
 
-    ServerStatus UpdateOnPrefetch(PosixFile source,PosixFile destination);
+    ServerStatus UpdateOnMove(PosixFile source, PosixFile destination);
 
     std::vector<std::tuple<Segment,SegmentScore, PosixFile>> FetchHeatMap(PosixFile file);
 
-    std::map<uint8_t, std::tuple<double, double,double>> FetchLayerScores();
+    std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>> FetchLayerScores();
 
     std::vector<std::pair<PosixFile,PosixFile>> GetDataLocation(PosixFile file);
 

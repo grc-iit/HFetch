@@ -9,6 +9,6 @@
 
 class DPE{
 public:
-    virtual std::vector<std::pair<PosixFile,PosixFile>> place(std::vector<Event> events) = 0;
+    virtual std::vector<std::tuple<PosixFile, PosixFile,double>> place(std::vector<Event> events) = 0;
 };
 #endif //HFETCH_DPE_H

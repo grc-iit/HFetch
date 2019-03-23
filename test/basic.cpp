@@ -3,6 +3,7 @@
 //
 
 #include <hfetch.h>
+#include "util.h"
 
 char* GenerateData(long size){
     char* data= static_cast<char *>(malloc(size));
@@ -21,6 +22,7 @@ char* GenerateData(long size){
 
 int main(int argc, char*argv[]){
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
+    setup_env(args);
     void* buf = malloc(args.io_size_);
     char *homepath = getenv("RUN_DIR");
     char filename[256];
@@ -31,16 +33,16 @@ int main(int argc, char*argv[]){
     std::fwrite(write_buf,args.io_size_,1,pfh);
     std::fclose(pfh);
 
-
-    sprintf(filename, "%s/pfs/test_%d.bat", homepath,1);
+    char filename2[256];
+    sprintf(filename2, "%s/pfs/test_%d.bat", homepath,1);
     /* prepare data to be read */
-    pfh = std::fopen(filename,"w+");
+    pfh = std::fopen(filename2,"w+");
     std::fwrite(write_buf,args.io_size_,1,pfh);
     std::fclose(pfh);
 
     /* Actual APP */
-    for(int i=0;i<1024;i++){
-        sprintf(filename, "%s/pfs/test_%d.bat", homepath,i%1);
+    for(int i=0;i<2;i++){
+        sprintf(filename, "%s/pfs/test_%d.bat", homepath,i%2);
         printf("Iteration:%d\n",i);
         FILE* fh = hfetch::fopen(filename,"r");
         hfetch::fread(buf,args.io_size_/2,1,fh);
@@ -49,5 +51,6 @@ int main(int argc, char*argv[]){
     }
     free(buf);
     hfetch::MPI_Finalize();
+    clean_env(args);
     return 0;
 }

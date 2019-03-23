@@ -2,6 +2,7 @@
 // Created by hariharan on 3/18/19.
 //
 
+#include <test/util.h>
 #include "server.h"
 
 int main(int argc, char*argv[]){
@@ -9,6 +10,7 @@ int main(int argc, char*argv[]){
     pthread_setname_np(pthread_self(), name.c_str());
     MPI_Init(&argc,&argv);
     InputArgs args = Server::InitializeServer(argc,argv);
+    setup_env(args);
     if (CONF->my_rank_world == 0) {
         printf("Press any key to start server\n");
         getchar();

@@ -29,7 +29,7 @@ ServerStatus FileSegmentAuditor::Update(std::vector<Event> events) {
     return SERVER_SUCCESS;
 }
 
-ServerStatus FileSegmentAuditor::UpdateOnPrefetch(PosixFile source,PosixFile destination) {
+ServerStatus FileSegmentAuditor::UpdateOnMove(PosixFile source, PosixFile destination) {
     auto iter = file_segment_map.find(source.filename);
     if(iter != file_segment_map.end()){
         SegmentMap* multiMapScore = iter->second;
@@ -43,20 +43,26 @@ ServerStatus FileSegmentAuditor::UpdateOnPrefetch(PosixFile source,PosixFile des
                 multiMapScore->Put(left_over,elements.second);
             }
             /* update intersected score */
-            auto layer_score_iter = layer_score_map.Get(elements.second.first.layer.id_);
-            if(layer_score_iter.first){
-                layer_score_iter.second.erase(elements.second.second.GetScore());
-                layer_score_map.Put(elements.second.first.layer.id_,layer_score_iter.second);
-            }
-
             auto common = source.segment.Intersect(elements.first);
+            auto previous_score = elements.second.second.GetScore();
             elements.second.first = destination;
             elements.second.first.segment.start = common.start - source.segment.start;
             elements.second.first.segment.end = common.end - source.segment.start;
             multiMapScore->Put(common,elements.second);
-            layer_score_iter = layer_score_map.Get(destination.layer.id_);
+            auto layer_score_iter = layer_score_map.Get(elements.second.first.layer.id_);
             if(layer_score_iter.first){
-                layer_score_iter.second.insert(elements.second.second.GetScore());
+                auto ret = layer_score_iter.second.equal_range(previous_score);
+                auto it=ret.first;
+                while( it!=ret.second){
+                    if(it->second.first.filename == source.filename && it->second.first.segment == elements.first){
+                        it = layer_score_iter.second.erase(it);
+                    }else ++it;
+                }
+                PosixFile sub_buf=elements.second.first;
+                PosixFile sub_source=source;
+                sub_source.segment = common;
+                sub_buf.segment = common;
+                layer_score_iter.second.emplace(elements.second.second.GetScore(),std::pair<PosixFile,PosixFile>(sub_source,sub_buf));
                 layer_score_map.Put(elements.second.first.layer.id_,layer_score_iter.second);
             }
         }
@@ -97,24 +103,34 @@ ServerStatus FileSegmentAuditor::IncreaseFileSegmentFrequency(Event event) {
             }
             /* update intersected score */
             auto common = event.segment.Intersect(elements.first);
+            auto previous_score = elements.second.second.GetScore();
             elements.second.second.frequency+=1;
             elements.second.second.lrf+=pow(.5,LAMDA_FOR_SCORE*event.time/1000000.0);
             double newScore = elements.second.second.GetScore();
             printf("File:%s,%ld,%ld Score:%f\n",
-                    elements.second.first.filename.c_str(),
+                    event.filename.c_str(),
                     elements.second.first.segment.start,
-                   elements.second.first.segment.end,
-                   newScore);
+                    elements.second.first.segment.end,
+                    newScore);
+            multiMapScore->Put(common,elements.second);
             auto layer_score_iter = layer_score_map.Get(elements.second.first.layer.id_);
             if(layer_score_iter.first){
-                layer_score_iter.second.insert(newScore);
+                auto ret = layer_score_iter.second.equal_range(previous_score);
+                auto it=ret.first;
+                while( it!=ret.second){
+                    if(it->second.first.filename == event.filename && it->second.first.segment == elements.first){
+                        it = layer_score_iter.second.erase(it);
+                    }else ++it;
+                }
+                PosixFile sub_buf=elements.second.first;
+                sub_buf.segment = common;
+                PosixFile sub_source;
+                sub_source.filename=event.filename;
+                sub_source.layer=Layer(event.layer_index);
+                sub_source.segment = common;
+                layer_score_iter.second.emplace(elements.second.second.GetScore(),std::pair<PosixFile,PosixFile>(sub_source,sub_buf));
                 layer_score_map.Put(elements.second.first.layer.id_,layer_score_iter.second);
-            }else{
-                auto s=std::set<double,std::greater<double>>();
-                s.insert(newScore);
-                layer_score_map.Put(elements.second.first.layer.id_,s);
             }
-            multiMapScore->Put(common,elements.second);
         }
     }
     return SERVER_SUCCESS;
@@ -173,21 +189,11 @@ std::vector<std::tuple<Segment,SegmentScore, PosixFile>> FileSegmentAuditor::Fet
     return vector_tuple;
 }
 
-std::map<uint8_t, std::tuple<double, double,double>> FileSegmentAuditor::FetchLayerScores() {
+std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>> FileSegmentAuditor::FetchLayerScores() {
     auto allDatas=layer_score_map.GetAllData();
-    std::map<uint8_t, std::tuple<double, double,double>> return_map=std::map<uint8_t, std::tuple<double, double,double>>();
+    auto return_map=std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>>();
     for(auto data:allDatas){
-        Layer layer(data.first);
-        double remaining_capcity=layer.capacity_mb_*MB-ioFactory->GetClient(layer.io_client_type)->GetCurrentUsage(layer);
-        remaining_capcity=remaining_capcity<0?0:remaining_capcity;
-        double min_score = -1*(std::numeric_limits<double>::max()-1);
-        double max_score = std::numeric_limits<double>::max();
-        if(data.second.size() > 0){
-            max_score = *data.second.begin();
-            min_score = *data.second.begin();
-        }
-        if(data.second.size() > 1) min_score = *data.second.rbegin();
-        return_map.emplace(data.first,std::tuple<double, double,double>(min_score,max_score,remaining_capcity));
+        return_map.emplace(data.first,data.second);
     }
     return return_map;
 }

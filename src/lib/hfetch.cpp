@@ -23,7 +23,7 @@ FILE *hfetch::fopen(const char *filename, const char *mode) {
     Event event;
     event.filename=CharStruct(basename(filename));
     event.segment.start=0;
-    event.segment.end=file_size;
+    event.segment.end=file_size-1;
     event.layer_index=Layer::LAST->id_;
     event.source=EventSource::APPLICATION;
     event.event_type=EventType::FILE_OPEN;
@@ -44,7 +44,7 @@ int hfetch::fclose(FILE *fh) {
         Event event;
         event.filename=CharStruct(basename(result.second.c_str()));
         event.segment.start=0;
-        event.segment.end=file_size;
+        event.segment.end=file_size-1;
         event.layer_index=Layer::LAST->id_;
         event.source=EventSource::APPLICATION;
         event.event_type=EventType::FILE_CLOSE;
@@ -70,7 +70,7 @@ size_t hfetch::fread(void *ptr, size_t size, size_t count, FILE *fh) {
         Event event;
         event.filename=CharStruct(basename(result.second.c_str()));
         event.segment.start=current_offset;
-        event.segment.end=current_offset+size*count;
+        event.segment.end=current_offset+size*count-1;
         event.layer_index=Layer::LAST->id_;
         event.source=EventSource::APPLICATION;
         event.event_type=EventType::FILE_READ;
