@@ -92,7 +92,7 @@ public:
         CONF->max_num_files=args.max_files;
         CONF->num_workers=args.num_workers;
         CONF->is_server=false;
-        CONF->num_servers=CONF->comm_size/CONF->ranks_per_server;
+        CONF->num_servers=args.num_servers;
         CONF->my_server=CONF->my_rank_world/CONF->ranks_per_server;
         CONF->UpdateServerComm();
         Singleton<Server>::GetInstance();
@@ -132,7 +132,7 @@ public:
     }
 
     std::vector<std::pair<PosixFile,PosixFile>> GetDataLocation(PosixFile file){
-        return auditor->GetDataLocationServer(file,CONF->my_server);
+        return auditor->GetDataLocation(file);
     }
 
     ServerStatus pushEvents(Event e){

@@ -38,6 +38,7 @@ typedef struct InputArgs{
     int ranks_per_server_;
     size_t num_workers;
     int max_files;
+    int num_servers;
 
 } InputArgs;
 
@@ -330,8 +331,8 @@ typedef struct PosixFile{
     CharStruct filename;
     Segment segment;
     Layer layer;
-    char* data;
-    PosixFile():filename(),segment(),layer(*Layer::LAST),data(NULL){}
+    bip::string data;
+    PosixFile():filename(),segment(),layer(*Layer::LAST),data(){}
     PosixFile(const PosixFile &other) : filename(other.filename),segment(other.segment),layer(other.layer),data(other.data) {} /* copy constructor */
     PosixFile(PosixFile &&other) : filename(other.filename),segment(other.segment),layer(other.layer),data(other.data) {} /* move constructor*/
     /* Assignment Operator */
@@ -537,11 +538,12 @@ namespace clmdep_msgpack {
                         input.filename = o.via.array.ptr[0].as<CharStruct>();
                         input.segment = o.via.array.ptr[1].as<Segment>();
                         input.layer = Layer(o.via.array.ptr[2].as<uint8_t>());
-                        std::string s=o.via.array.ptr[3].as<std::string>();
+                        input.data = o.via.array.ptr[2].as<bip::string>();
+                       /* std::string s=o.via.array.ptr[3].as<std::string>();
                         if(s.size()>0){
                             input.data= static_cast<char *>(malloc(s.size() + 1));
                             strcpy(input.data,s.data());
-                        }
+                        }*/
                         return o;
                     }
                 };
@@ -555,8 +557,9 @@ namespace clmdep_msgpack {
                         o.pack(input.filename);
                         o.pack(input.segment);
                         o.pack(input.layer.id_);
-                        if(input.data !=NULL) o.pack(std::string(input.data));
-                        else o.pack(std::string());
+                        o.pack(input.data);
+                        /*if(input.data !=NULL) o.pack(std::string(input.data));
+                        else o.pack(std::string());*/
                         return o;
                     }
                 };
@@ -570,8 +573,9 @@ namespace clmdep_msgpack {
                         o.via.array.ptr[0] = mv1::object(input.filename, o.zone);
                         o.via.array.ptr[1] = mv1::object(input.segment, o.zone);
                         o.via.array.ptr[2] = mv1::object(input.layer.id_, o.zone);
-                        if(input.data !=NULL) o.via.array.ptr[3] = mv1::object(std::string(input.data), o.zone);
-                        else o.via.array.ptr[3] = mv1::object(std::string(), o.zone);
+                        o.via.array.ptr[3] = mv1::object(input.data, o.zone);
+                        /*if(input.data !=NULL) o.via.array.ptr[3] = mv1::object(std::string(input.data), o.zone);
+                        else o.via.array.ptr[3] = mv1::object(std::string(), o.zone);*/
                     }
                 };
 

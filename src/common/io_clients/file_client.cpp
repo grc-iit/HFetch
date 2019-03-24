@@ -9,7 +9,7 @@ ServerStatus FileClient::Read(PosixFile source, PosixFile destination) {
     FILE* fh = fopen(file_path.c_str(),"r");
     fseek(fh,source.segment.start,SEEK_SET);
     size_t size=source.segment.end-source.segment.start;
-    fread(destination.data,source.segment.end-source.segment.start, 1,fh);
+    fread(destination.data.data(),source.segment.end-source.segment.start, 1,fh);
     fclose(fh);
     return SERVER_SUCCESS;
 }
@@ -21,7 +21,7 @@ ServerStatus FileClient::Write(PosixFile source, PosixFile destination) {
         fh = fopen(file_path.c_str(),"w+");
     }
     fseek(fh,destination.segment.start,SEEK_SET);
-    fwrite(source.data,destination.segment.end-destination.segment.start, 1,fh);
+    fwrite(source.data.c_str(),destination.segment.end-destination.segment.start, 1,fh);
     fclose(fh);
     hasChanged.Put(destination.layer.id_,true);
     return SERVER_SUCCESS;

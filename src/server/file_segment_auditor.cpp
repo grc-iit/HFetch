@@ -144,12 +144,12 @@ ServerStatus FileSegmentAuditor::CreateOffsetMap(Event event) {
         uint64_t sequence;
         if(iter.first){
             sequence = iter.second;
-            std::shared_ptr<SegmentMap> mapLayer = offsetMaps[sequence % CONF->max_num_files];
+            std::shared_ptr<SegmentMap> mapLayer = offsetMaps[sequence];
             file_segment_map.emplace(event.filename,mapLayer);
-        }
-        else{
-            sequence = file_seq.GetNextSequenceServer(0);
-            std::shared_ptr<SegmentMap> mapLayer = offsetMaps[sequence % CONF->max_num_files];
+        }else{
+            sequence = file_seq.GetNextSequenceServer(0)% CONF->max_num_files;
+            valid_buffered_dataset.Put(name,sequence);
+            std::shared_ptr<SegmentMap> mapLayer = offsetMaps[sequence];
             SegmentScore score;
             score.frequency=0;
             score.lrf=0;
@@ -196,10 +196,10 @@ std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::great
 
 std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocation(PosixFile file) {
     std::vector<std::pair<PosixFile, PosixFile>> values = std::vector<std::pair<PosixFile, PosixFile>>();
-    auto iter = file_segment_map.find(file.filename);
+    auto iter = valid_buffered_dataset.Get(file.filename);
     long original_start=0;
-    if(iter != file_segment_map.end()){
-        std::shared_ptr<SegmentMap> map = iter->second;
+    if(iter.first){
+        std::shared_ptr<SegmentMap> map = offsetMaps[iter.second];
         auto allData = map->Contains(file.segment);
         for(auto data:allData){
             /* update intersected score */

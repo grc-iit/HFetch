@@ -12,7 +12,7 @@ ServerStatus MemoryClient::Read(PosixFile source, PosixFile destination) {
         if(iter.first){
             auto shm = new bip::managed_shared_memory(bip::open_only, iter.second.filename.c_str());
             MyShmString *str = shm->find<MyShmString>("myShmString").first;
-            memcpy(destination.data,str->c_str()+source.segment.start,source.GetSize());
+            destination.data.assign(str->c_str()+source.segment.start,source.GetSize());
             return SERVER_SUCCESS;
         }
     }else{
@@ -31,16 +31,16 @@ ServerStatus MemoryClient::Write(PosixFile source, PosixFile destination) {
                 auto shm = new bip::managed_shared_memory(bip::create_only,destination.filename.c_str() , source.GetSize()+1024);
                 CharAllocator charallocator(shm->get_segment_manager());
                 MyShmString *myShmString = shm->construct<MyShmString>("myShmString")(charallocator);
-                myShmString->assign(source.data, source.GetSize());
+                myShmString->assign(source.data.data(), source.GetSize());
                 PosixFile dummy=destination;
-                dummy.data=NULL;
+                dummy.data=bip::string();
                 data_map.Put(destination.filename, dummy);
             }else if(iter.second.GetSize() >= source.segment.end){
                 char* data = static_cast<char *>(malloc(iter.second.GetSize()));
                 auto shm = new bip::managed_shared_memory(bip::open_only, iter.second.filename.c_str());
                 MyShmString *str = shm->find<MyShmString>("myShmString").first;
                 memcpy(data,str->c_str(),str->size());
-                memcpy(data+source.segment.start, source.data,source.GetSize());
+                memcpy(data+source.segment.start, source.data.data(),source.GetSize());
                 str->assign(data, iter.second.GetSize());
                 free(data);
             }else{
@@ -49,14 +49,14 @@ ServerStatus MemoryClient::Write(PosixFile source, PosixFile destination) {
                 auto shm = new bip::managed_shared_memory(bip::open_only, iter.second.filename.c_str());
                 MyShmString *str = shm->find<MyShmString>("myShmString").first;
                 memcpy(data,str->c_str(),source.segment.start + 1);
-                memcpy(data + source.segment.start, source.data,source.GetSize());
+                memcpy(data + source.segment.start, source.data.data(),source.GetSize());
                 bip::shared_memory_object::remove(iter.second.filename.c_str());
                 shm = new bip::managed_shared_memory(bip::create_only,destination.filename.c_str() , new_size+1024);
                 CharAllocator charallocator(shm->get_segment_manager());
                 MyShmString *myShmString = shm->construct<MyShmString>("myShmString")(charallocator);
                 myShmString->assign(data, new_size);
                 iter.second.segment.end=new_size;
-                iter.second.data=NULL;
+                iter.second.data=bip::string();
                 data_map.Put(destination.filename, iter.second);
                 free(data);
             }
@@ -64,9 +64,9 @@ ServerStatus MemoryClient::Write(PosixFile source, PosixFile destination) {
             auto shm = new bip::managed_shared_memory(bip::create_only,destination.filename.c_str() , source.GetSize()+1024);
             CharAllocator charallocator(shm->get_segment_manager());
             MyShmString *myShmString = shm->construct<MyShmString>("myShmString")(charallocator);
-            myShmString->assign((char*)source.data, source.GetSize());
+            myShmString->assign(source.data.data(), source.GetSize());
             PosixFile dummy=destination;
-            dummy.data=NULL;
+            dummy.data=bip::string();
             data_map.Put(destination.filename, dummy);
         }
         return SERVER_SUCCESS;

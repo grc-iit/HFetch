@@ -41,11 +41,11 @@ public:
                          valid_buffered_dataset("VALID_SEQ",CONF->is_server,CONF->my_server,CONF->num_servers){
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->num_servers);
         ioFactory = Singleton<IOClientFactory>::GetInstance();
+        offsetMaps=new std::shared_ptr<SegmentMap>[CONF->max_num_files];
+        for (int i = 0; i < CONF->max_num_files; ++i) {
+            offsetMaps[i] = std::make_shared<SegmentMap>(std::to_string(i) + "_OFFSET",CONF->is_server,CONF->my_server,CONF->num_servers);
+        }
         if(CONF->is_server){
-            offsetMaps=new std::shared_ptr<SegmentMap>[CONF->max_num_files];
-            for (int i = 0; i < CONF->max_num_files; ++i) {
-                offsetMaps[i] = std::make_shared<SegmentMap>(std::to_string(i) + "_OFFSET",CONF->is_server,CONF->my_server,CONF->num_servers);
-            }
             std::function<std::vector<std::pair<PosixFile,PosixFile>>(PosixFile)> getDataLocationFunc(std::bind(&FileSegmentAuditor::GetDataLocation, this, std::placeholders::_1));
             rpc->bind(FILE_SEGMENT_AUDITOR+"_GetDataLocation", getDataLocationFunc);
             MPI_Barrier(MPI_COMM_WORLD);

@@ -80,12 +80,15 @@ size_t hfetch::fread(void *ptr, size_t size, size_t count, FILE *fh) {
         file.segment = event.segment;
         file.layer = *Layer::LAST;
         auto datas = server->GetDataLocation(file);
+        size_t original_offset=0;
         if(datas.size()>0){
             for(auto data:datas){
                 if(data.first.layer != *Layer::LAST) CONF->hit++;
                 CONF->total++;
-                data.second.data = static_cast<char *>(ptr);
+                data.second.data.reserve(data.second.GetSize());
                 Singleton<IOClientFactory>::GetInstance()->GetClient(data.first.layer.io_client_type)->Read(data.first,data.second);
+                memcpy((char*)ptr+original_offset,data.second.data.data(),data.second.GetSize());
+                original_offset+=data.second.GetSize();
             }
         }else{
             std::fread(ptr,size,count,fh);

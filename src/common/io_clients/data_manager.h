@@ -18,13 +18,13 @@ public:
         fileSegmentAuditor = Singleton<FileSegmentAuditor>::GetInstance();
     }
     ServerStatus Move(PosixFile source, PosixFile destination, bool deleteSource = true) {
-        destination.data=(char*)malloc(source.GetSize());
+        destination.data.reserve(source.GetSize());
         ServerStatus status;
         status = ioFactory->GetClient(source.layer.io_client_type)->Read(source,destination);
         if(status != SERVER_SUCCESS) return status;
         status = ioFactory->GetClient(destination.layer.io_client_type)->Write(destination,destination);
         if(status != SERVER_SUCCESS) return status;
-        free(destination.data);
+        destination.data.erase();
         if(deleteSource) status = ioFactory->GetClient(source.layer.io_client_type)->Delete(source);
         return status;
     }
