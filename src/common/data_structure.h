@@ -37,6 +37,7 @@ typedef struct InputArgs{
     size_t direct_io_;
     int ranks_per_server_;
     size_t num_workers;
+    int max_files;
 
 } InputArgs;
 
@@ -329,9 +330,8 @@ typedef struct PosixFile{
     CharStruct filename;
     Segment segment;
     Layer layer;
-    void* data;
-    PosixFile():filename(),segment(),layer(*Layer::LAST),data(){}
-    PosixFile(CharStruct filename_, Segment segment_,Layer layer_,void* data_):filename(filename_),segment(segment_),layer(layer_),data(data_){} /* Parameterized constructor */
+    char* data;
+    PosixFile():filename(),segment(),layer(*Layer::LAST),data(NULL){}
     PosixFile(const PosixFile &other) : filename(other.filename),segment(other.segment),layer(other.layer),data(other.data) {} /* copy constructor */
     PosixFile(PosixFile &&other) : filename(other.filename),segment(other.segment),layer(other.layer),data(other.data) {} /* move constructor*/
     /* Assignment Operator */
@@ -343,7 +343,7 @@ typedef struct PosixFile{
         return *this;
     }
 
-    size_t GetSize(){
+    long GetSize() const{
         return segment.GetSize();
     }
 } PosixFile;
@@ -458,7 +458,7 @@ namespace clmdep_msgpack {
                 struct convert<SegmentScore> {
                     mv1::object const& operator()(mv1::object const& o, SegmentScore& input) const {
                         input.frequency = o.via.array.ptr[0].as<size_t>();
-                        input.lrf = o.via.array.ptr[1].as<HTime>();
+                        input.lrf = o.via.array.ptr[1].as<double>();
                         return o;
                     }
                 };
@@ -537,6 +537,8 @@ namespace clmdep_msgpack {
                         input.filename = o.via.array.ptr[0].as<CharStruct>();
                         input.segment = o.via.array.ptr[1].as<Segment>();
                         input.layer = Layer(o.via.array.ptr[2].as<uint8_t>());
+                        std::string s=o.via.array.ptr[3].as<std::string>();
+                        if(s.size()>0) input.data=s.data();
                         return o;
                     }
                 };
@@ -546,10 +548,12 @@ namespace clmdep_msgpack {
                     template <typename Stream>
                     packer<Stream>& operator()(mv1::packer<Stream>& o, PosixFile const& input) const {
                         // packing member variables as an array.
-                        o.pack_array(3);
+                        o.pack_array(4);
                         o.pack(input.filename);
                         o.pack(input.segment);
                         o.pack(input.layer.id_);
+                        if(input.data !=NULL) o.pack(std::string(input.data));
+                        else o.pack(std::string());
                         return o;
                     }
                 };
@@ -558,11 +562,13 @@ namespace clmdep_msgpack {
                 struct object_with_zone<PosixFile> {
                     void operator()(mv1::object::with_zone& o, PosixFile const& input) const {
                         o.type = type::ARRAY;
-                        o.via.array.size = 3;
+                        o.via.array.size = 4;
                         o.via.array.ptr = static_cast<clmdep_msgpack::object*>(o.zone.allocate_align(sizeof(mv1::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(mv1::object)));
                         o.via.array.ptr[0] = mv1::object(input.filename, o.zone);
                         o.via.array.ptr[1] = mv1::object(input.segment, o.zone);
                         o.via.array.ptr[2] = mv1::object(input.layer.id_, o.zone);
+                        if(input.data !=NULL) o.via.array.ptr[3] = mv1::object(std::string(input.data), o.zone);
+                        else o.via.array.ptr[3] = mv1::object(std::string(), o.zone);
                     }
                 };
 

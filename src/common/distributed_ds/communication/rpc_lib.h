@@ -50,6 +50,7 @@ public:
             /* Create a server communication group */
             MPI_Comm scomm;
             MPI_Comm_split(MPI_COMM_WORLD, is_server, my_rank, &scomm);
+            name=name+"_"+std::to_string(my_server);
             /* if current rank is a server */
             if (is_server) {
                 /* Get hostname where server is running Name */
@@ -128,7 +129,8 @@ public:
     }
 
     void run(size_t workers=1){
-        if(is_server) server->async_run(workers);
+        if(is_server)
+            server->async_run(workers);
     }
 
     template <typename... Args>
@@ -139,6 +141,15 @@ public:
         rpc::client client(server_list->at(server_index).c_str(), port);
         //client.set_timeout(5000);
         return client.call(func_name, std::forward<Args>(args)...);
+    }
+    template <typename... Args>
+    std::future<RPCLIB_MSGPACK::object_handle> async_call(uint16_t server_index,std::string const &func_name,
+                                       Args... args) {
+        int16_t port = server_port + server_index;
+        /* Connect to Server */
+        rpc::client client(server_list->at(server_index).c_str(), port);
+        //client.set_timeout(5000);
+        return client.async_call(func_name, std::forward<Args>(args)...);
     }
 };
 

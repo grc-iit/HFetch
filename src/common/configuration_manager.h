@@ -19,13 +19,15 @@ public:
     uint16_t my_server;
     DataPlacementEngineType dpeType;
     double hit,total;
+    int max_num_files;
 
 
     ConfigurationManager():
     num_servers(1),is_server(false),ranks_per_server(1),my_server(0),my_rank_server(0),num_workers(1),
-    dpeType(DataPlacementEngineType::MAX_BW),server_comm(),hit(0.0),total(0.0){
+    dpeType(DataPlacementEngineType::MAX_BW),server_comm(),hit(0.0),total(0.0),max_num_files(1){
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_world);
+        max_num_files=comm_size;
     }
     void UpdateServerComm(){
         MPI_Comm_split(MPI_COMM_WORLD, is_server, my_rank_world, &server_comm);

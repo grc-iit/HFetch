@@ -31,7 +31,7 @@ ServerStatus MemoryClient::Write(PosixFile source, PosixFile destination) {
                 auto shm = new bip::managed_shared_memory(bip::create_only,destination.filename.c_str() , source.GetSize()+1024);
                 CharAllocator charallocator(shm->get_segment_manager());
                 MyShmString *myShmString = shm->construct<MyShmString>("myShmString")(charallocator);
-                myShmString->assign((char*)source.data, source.GetSize());
+                myShmString->assign(source.data, source.GetSize());
                 data_map.Put(destination.filename, destination);
             }else if(iter.second.GetSize() >= source.segment.end){
                 char* data = static_cast<char *>(malloc(iter.second.GetSize()));

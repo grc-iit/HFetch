@@ -30,16 +30,18 @@ int main(int argc, char*argv[]){
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (my_rank == 0) {
-        printf("Press any key to start program\n");
-        getchar();
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
     size_t my_rank_size = args.io_size_/comm_size;
     void* buf = malloc(my_rank_size);
     char *homepath = getenv("RUN_DIR");
     char filename[256];
     char* write_buf = GenerateData(my_rank_size);
+    printf("rank:%d, my_server:%d\n",my_rank,CONF->my_server);
+    if (my_rank == 0) {
+        printf("Press any key to start program\n");
+        getchar();
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
     sprintf(filename, "%s/pfs/test_%d.bat", homepath,my_rank);
     /* prepare data to be read */
     FILE* pfh = std::fopen(filename,"w+");

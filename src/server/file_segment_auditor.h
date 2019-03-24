@@ -9,6 +9,7 @@
 #include <src/common/distributed_ds/hashmap/DistributedHashMap.h>
 #include <src/common/distributed_ds/map/DistributedMap.h>
 #include <src/common/distributed_ds/multimap/DistributedMultiMap.h>
+#include <src/common/distributed_ds/sequencer/global_sequence.h>
 #include <src/common/configuration_manager.h>
 #include <src/common/singleton.h>
 #include <src/common/macros.h>
@@ -18,29 +19,36 @@
 class FileSegmentAuditor {
     /* filename to offset_map pointer*/
     typedef DistributedMap<Segment,std::pair<PosixFile,SegmentScore>> SegmentMap;
-    std::unordered_map<CharStruct,SegmentMap*> file_segment_map;
+    std::unordered_map<CharStruct,std::shared_ptr<SegmentMap>> file_segment_map;
+    DistributedHashMap<CharStruct, uint64_t> valid_buffered_dataset;
+    std::shared_ptr<SegmentMap>* offsetMaps;
     DistributedHashMap<CharStruct,uint32_t> file_active_status;
     DistributedHashMap<uint8_t,std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>> layer_score_map;
     std::shared_ptr<RPC> rpc;
     std::shared_ptr<IOClientFactory> ioFactory;
+    GlobalSequence file_seq;
     const std::string FILE_SEGMENT_AUDITOR="FILE_SEGMENT_AUDITOR";
 
     ServerStatus CreateOffsetMap(Event event);
-    ServerStatus SyncCreateOffsetMap(Event event);
     ServerStatus MarkFileSegmentsActive(Event event);
     ServerStatus MarkFileSegmentsInactive(Event event);
     ServerStatus IncreaseFileSegmentFrequency(Event event);
 
 public:
     FileSegmentAuditor():file_segment_map(),file_active_status("FILE_ACTIVE_STATUS",CONF->is_server,CONF->my_server,CONF->num_servers),
-                         layer_score_map("LAYER_SCORE_MAP",CONF->is_server,CONF->my_server,CONF->num_servers){
+                         layer_score_map("LAYER_SCORE_MAP",CONF->is_server,CONF->my_server,CONF->num_servers),
+                         file_seq("FILE_INDEX",CONF->is_server,CONF->my_server,CONF->num_servers),
+                         valid_buffered_dataset("VALID_SEQ",CONF->is_server,CONF->my_server,CONF->num_servers){
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->num_servers);
         ioFactory = Singleton<IOClientFactory>::GetInstance();
         if(CONF->is_server){
-            std::function<ServerStatus(Event)> createOffsetMapFunc(std::bind(&FileSegmentAuditor::CreateOffsetMap, this, std::placeholders::_1));
+            offsetMaps=new std::shared_ptr<SegmentMap>[CONF->max_num_files];
+            for (int i = 0; i < CONF->max_num_files; ++i) {
+                offsetMaps[i] = std::make_shared<SegmentMap>(std::to_string(i) + "_OFFSET",CONF->is_server,CONF->my_server,CONF->num_servers);
+            }
             std::function<std::vector<std::pair<PosixFile,PosixFile>>(PosixFile)> getDataLocationFunc(std::bind(&FileSegmentAuditor::GetDataLocation, this, std::placeholders::_1));
-            rpc->bind(FILE_SEGMENT_AUDITOR+"_CreateOffsetMap", createOffsetMapFunc);
             rpc->bind(FILE_SEGMENT_AUDITOR+"_GetDataLocation", getDataLocationFunc);
+            MPI_Barrier(MPI_COMM_WORLD);
             if(CONF->my_rank_server == 0){
                 Layer* current=Layer::FIRST;
                 while(current != nullptr){
@@ -48,6 +56,7 @@ public:
                     current = current->next;
                 }
             }
+            MPI_Barrier(MPI_COMM_WORLD);
         }
 
     }
@@ -66,6 +75,7 @@ public:
 
     bool CheckIfFileActive(PosixFile file);
 
+    ServerStatus CallCreateOffsetRPC(uint16_t server, Event event);
 };
 
 

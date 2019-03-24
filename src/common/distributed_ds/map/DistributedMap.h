@@ -100,7 +100,7 @@ public:
             rpc->bind(func_prefix+"_GetAllData", getAllDataInServerFunc);
             rpc->bind(func_prefix+"_Contains", containsInServerFunc);
         }
-
+        MPI_Barrier(MPI_COMM_WORLD);
         /* Map the clients to their respective memory pools */
         if(!is_server){
             segment=boost::interprocess::managed_shared_memory(boost::interprocess::open_only,name.c_str());
@@ -111,6 +111,7 @@ public:
             res2 = segment.find<boost::interprocess::interprocess_mutex>("mtx");
             mutex = res2.first;
         }
+        MPI_Barrier(MPI_COMM_WORLD);
     }
     /**
      * Put the data into the hashmap. Uses key to decide the server to hash it to,

@@ -69,11 +69,12 @@ public:
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
         CONF->ranks_per_server=args.ranks_per_server_;
+        CONF->max_num_files=args.max_files;
         CONF->num_workers=args.num_workers;
         CONF->is_server=true;
         CONF->num_servers=CONF->comm_size;
-        CONF->my_server=CONF->my_rank_server;
         CONF->UpdateServerComm();
+        CONF->my_server=CONF->my_rank_server;
         return args;
 
     }
@@ -83,6 +84,7 @@ public:
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
         CONF->ranks_per_server=args.ranks_per_server_;
+        CONF->max_num_files=args.max_files;
         CONF->num_workers=args.num_workers;
         CONF->is_server=false;
         CONF->num_servers=CONF->comm_size/CONF->ranks_per_server;
@@ -98,12 +100,13 @@ public:
     clock("GLOBAL_CLOCK",CONF->is_server,CONF->my_server,CONF->num_servers){
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->comm_size);
         if(CONF->is_server){
+            rpc->run(CONF->num_workers);
             eventManager = Singleton<EventManager>::GetInstance();
             hardwareMonitor = Singleton<HardwareMonitor>::GetInstance();
         }
         auditor = Singleton<FileSegmentAuditor>::GetInstance();
         if(CONF->is_server) {
-            rpc->run(CONF->num_workers);
+
         }
     }
 

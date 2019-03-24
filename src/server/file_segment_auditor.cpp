@@ -11,7 +11,7 @@ ServerStatus FileSegmentAuditor::Update(std::vector<Event> events) {
             case EventType::FILE_OPEN:{
                 auto file_iter = file_segment_map.find(event.filename);
                 if(file_iter == file_segment_map.end()){
-                    SyncCreateOffsetMap(event);
+                    CreateOffsetMap(event);
                 }
                 MarkFileSegmentsActive(event);
                 break;
@@ -32,7 +32,7 @@ ServerStatus FileSegmentAuditor::Update(std::vector<Event> events) {
 ServerStatus FileSegmentAuditor::UpdateOnMove(PosixFile source, PosixFile destination) {
     auto iter = file_segment_map.find(source.filename);
     if(iter != file_segment_map.end()){
-        SegmentMap* multiMapScore = iter->second;
+        std::shared_ptr<SegmentMap> multiMapScore = iter->second;
         auto iter = multiMapScore->Get(source.segment);
         auto allDatas = multiMapScore->Contains(source.segment);
         for(auto elements : allDatas){
@@ -92,7 +92,7 @@ ServerStatus FileSegmentAuditor::MarkFileSegmentsInactive(Event event) {
 ServerStatus FileSegmentAuditor::IncreaseFileSegmentFrequency(Event event) {
     auto iter = file_segment_map.find(event.filename);
     if(iter != file_segment_map.end()){
-        SegmentMap* multiMapScore = iter->second;
+        std::shared_ptr<SegmentMap> multiMapScore = iter->second;
         auto allDatas = multiMapScore->Contains(event.segment);
         for(auto elements : allDatas){
             multiMapScore->Erase(elements.first);
@@ -137,12 +137,19 @@ ServerStatus FileSegmentAuditor::IncreaseFileSegmentFrequency(Event event) {
 }
 
 ServerStatus FileSegmentAuditor::CreateOffsetMap(Event event) {
-    MPI_Barrier(CONF->server_comm);
     auto file_iter = file_segment_map.find(event.filename);
     if(file_iter == file_segment_map.end()){
         std::string name(event.filename.c_str());
-        SegmentMap* mapLayer = new SegmentMap(name + "_SEGEMENT",CONF->is_server,CONF->my_server,CONF->num_servers);
-        if(CONF->my_rank_server == 0){
+        auto iter = valid_buffered_dataset.Get(name);
+        uint64_t sequence;
+        if(iter.first){
+            sequence = iter.second;
+            std::shared_ptr<SegmentMap> mapLayer = offsetMaps[sequence % CONF->max_num_files];
+            file_segment_map.emplace(event.filename,mapLayer);
+        }
+        else{
+            sequence = file_seq.GetNextSequenceServer(0);
+            std::shared_ptr<SegmentMap> mapLayer = offsetMaps[sequence % CONF->max_num_files];
             SegmentScore score;
             score.frequency=0;
             score.lrf=0;
@@ -151,20 +158,9 @@ ServerStatus FileSegmentAuditor::CreateOffsetMap(Event event) {
             file.segment = event.segment;
             file.layer = Layer(event.layer_index);
             mapLayer->Put(event.segment,std::pair<PosixFile,SegmentScore>(file,score));
+            file_segment_map.emplace(event.filename,mapLayer);
         }
-        file_segment_map.emplace(event.filename,mapLayer);
-    }
-    MPI_Barrier(CONF->server_comm);
-    return ServerStatus::SERVER_SUCCESS;
-}
 
-ServerStatus FileSegmentAuditor::SyncCreateOffsetMap(Event event) {
-    for(int i=0;i<CONF->num_servers;++i){
-        if(i!=CONF->my_server){
-            rpc->call(i,FILE_SEGMENT_AUDITOR+"_CreateOffsetMap",event).template as<ServerStatus>();
-        }else{
-            CreateOffsetMap(event);
-        }
     }
     return ServerStatus::SERVER_SUCCESS;
 }
@@ -177,7 +173,7 @@ std::vector<std::tuple<Segment,SegmentScore, PosixFile>> FileSegmentAuditor::Fet
     auto iter = file_segment_map.find(file.filename);
 
     if(iter != file_segment_map.end()){
-        SegmentMap* map = iter->second;
+        std::shared_ptr<SegmentMap> map = iter->second;
         auto allData = map->GetAllData();
         for(auto data:allData){
             sorted_map.emplace(data.second.second,std::pair<Segment,PosixFile>(data.first,data.second.first));
@@ -203,7 +199,7 @@ std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocation
     auto iter = file_segment_map.find(file.filename);
     long original_start=0;
     if(iter != file_segment_map.end()){
-        SegmentMap* map = iter->second;
+        std::shared_ptr<SegmentMap> map = iter->second;
         auto allData = map->Contains(file.segment);
         for(auto data:allData){
             /* update intersected score */
@@ -231,4 +227,9 @@ bool FileSegmentAuditor::CheckIfFileActive(PosixFile file) {
         return iter.second != 0;
     }
     return false;
+}
+
+ServerStatus FileSegmentAuditor::CallCreateOffsetRPC(uint16_t server, Event event) {
+    rpc->call(server,FILE_SEGMENT_AUDITOR+"_CreateOffsetMap",event);
+    return SERVER_SUCCESS;
 }
