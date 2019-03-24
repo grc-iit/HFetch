@@ -11,8 +11,8 @@
 class IOClient{
 public:
     IOClient(){}
-    virtual ServerStatus Read(PosixFile source, PosixFile destination) = 0;
-    virtual ServerStatus Write(PosixFile source, PosixFile destination) = 0;
+    virtual ServerStatus Read(PosixFile &source, PosixFile &destination) = 0;
+    virtual ServerStatus Write(PosixFile &source, PosixFile &destination) = 0;
     virtual ServerStatus Delete(PosixFile file) = 0;
     virtual double GetCurrentUsage(Layer l) = 0;
 

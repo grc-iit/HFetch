@@ -4,7 +4,7 @@
 
 #include "memory_client.h"
 
-ServerStatus MemoryClient::Read(PosixFile source, PosixFile destination) {
+ServerStatus MemoryClient::Read(PosixFile &source, PosixFile &destination) {
 
     std::size_t hash_val = std::hash<CharStruct>()(source.filename)%CONF->num_servers;
     if(hash_val == CONF->my_server){
@@ -21,7 +21,7 @@ ServerStatus MemoryClient::Read(PosixFile source, PosixFile destination) {
     return SERVER_FAILED;
 }
 
-ServerStatus MemoryClient::Write(PosixFile source, PosixFile destination) {
+ServerStatus MemoryClient::Write(PosixFile &source, PosixFile &destination) {
     std::size_t hash_val = std::hash<CharStruct>()(source.filename)%CONF->num_servers;
     if(hash_val == CONF->my_server){
         auto iter = data_map.Get(destination.filename);

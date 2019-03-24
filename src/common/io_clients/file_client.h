@@ -16,8 +16,8 @@ class FileClient: public IOClient {
 public:
     FileClient():hasChanged("LAYER_CHANGED",CONF->is_server,CONF->my_server,CONF->num_servers),
                  layerCapacity("LAYER_CAPACITY",CONF->is_server,CONF->my_server,CONF->num_servers){}
-    ServerStatus Read(PosixFile source, PosixFile destination) override;
-    ServerStatus Write(PosixFile source, PosixFile destination) override;
+    ServerStatus Read(PosixFile &source, PosixFile &destination) override;
+    ServerStatus Write(PosixFile &source, PosixFile &destination) override;
     ServerStatus Delete(PosixFile file) override;
 
     double GetCurrentUsage(Layer l) override;

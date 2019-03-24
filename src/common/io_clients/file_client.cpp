@@ -4,17 +4,19 @@
 
 #include "file_client.h"
 
-ServerStatus FileClient::Read(PosixFile source, PosixFile destination) {
+ServerStatus FileClient::Read(PosixFile &source, PosixFile &destination) {
     std::string file_path=std::string(source.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(source.filename.c_str());
     FILE* fh = fopen(file_path.c_str(),"r");
     fseek(fh,source.segment.start,SEEK_SET);
     size_t size=source.segment.end-source.segment.start;
-    fread(destination.data.data(),source.segment.end-source.segment.start, 1,fh);
+    char* data= static_cast<char *>(malloc(size));
+    fread(data,size, 1,fh);
+    destination.data.assign(data,size);
     fclose(fh);
     return SERVER_SUCCESS;
 }
 
-ServerStatus FileClient::Write(PosixFile source, PosixFile destination) {
+ServerStatus FileClient::Write(PosixFile &source, PosixFile &destination) {
     std::string file_path=std::string(destination.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(destination.filename.c_str());
     FILE* fh = fopen(file_path.c_str(),"r+");
     if(fh==NULL){
@@ -61,10 +63,9 @@ double FileClient::GetCurrentUsage(Layer l) {
     std::array<char, 128> buffer;
     std::string result;
     FILE* pipe=popen(cmd.c_str(), "r");
-    if (!pipe){
-        usleep(2000);
+    while(!pipe){
+        sleep(1);
         pipe=popen(cmd.c_str(), "r");
-        throw std::runtime_error("popen() failed!");
     }
     while (!feof(pipe)) {
         if (fgets(buffer.data(), 128, pipe) != nullptr)
