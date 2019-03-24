@@ -3,6 +3,7 @@
 //
 
 #include <hfetch.h>
+#include <mpi.h>
 #include "util.h"
 
 char* GenerateData(long size){
@@ -23,37 +24,35 @@ char* GenerateData(long size){
 int main(int argc, char*argv[]){
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
     //setup_env(args);
-    void* buf = malloc(args.io_size_);
+    int my_rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    if (my_rank == 0) {
+        printf("Press any key to start program\n");
+        getchar();
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    size_t my_rank_size = args.io_size_/comm_size;
+    void* buf = malloc(my_rank_size);
     char *homepath = getenv("RUN_DIR");
     char filename[256];
-    char* write_buf = GenerateData(args.io_size_);
-    sprintf(filename, "%s/pfs/test_%d.bat", homepath,0);
+    char* write_buf = GenerateData(my_rank_size);
+    sprintf(filename, "%s/pfs/test_%d.bat", homepath,my_rank);
     /* prepare data to be read */
     FILE* pfh = std::fopen(filename,"w+");
-    std::fwrite(write_buf,args.io_size_,1,pfh);
-    std::fclose(pfh);
-
-    char filename2[256];
-    sprintf(filename2, "%s/pfs/test_%d.bat", homepath,1);
-    /* prepare data to be read */
-    pfh = std::fopen(filename2,"w+");
-    std::fwrite(write_buf,args.io_size_,1,pfh);
+    std::fwrite(write_buf,my_rank_size,1,pfh);
     std::fclose(pfh);
 
     /* Actual APP */
-    FILE** fh=new FILE*[2];
-    sprintf(filename, "%s/pfs/test_%d.bat", homepath,0);
-    fh[0] = hfetch::fopen(filename,"r");
-    sprintf(filename, "%s/pfs/test_%d.bat", homepath,1);
-    fh[1] = hfetch::fopen(filename,"r");
-    for(int i=0;i<8;i++){
-        int index=i%2;
+    FILE* fh = hfetch::fopen(filename,"r");
+    int iterations = 16;
+    size_t small_io_size = my_rank_size/iterations;
+    for(int i=0;i<iterations;i++){
         printf("Iteration:%d\n",i);
-        hfetch::fread(buf,args.io_size_/2,1,fh[index]);
+        hfetch::fread(buf,small_io_size,1,fh);
         usleep(10000);
     }
-    hfetch::fclose(fh[0]);
-    hfetch::fclose(fh[1]);
+    hfetch::fclose(fh);
     free(buf);
     hfetch::MPI_Finalize();
     //clean_env(args);

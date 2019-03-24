@@ -34,7 +34,7 @@ class HardwareMonitor {
         uint32_t watch_flags = IN_ALL_EVENTS;
         inotify_add_watch(fd, current->layer_loc.c_str(), watch_flags);
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
-            i = 0;
+            /*i = 0;
             length = static_cast<int>(read(fd, buffer, BUF_LEN ));
 
             if ( length < 0 ) {
@@ -68,7 +68,7 @@ class HardwareMonitor {
                     }
                     i += EVENT_SIZE + event->len;
                 }
-            }
+            }*/
         }
         /* Clean up*/
         inotify_rm_watch( fd, wd );
