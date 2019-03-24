@@ -538,7 +538,10 @@ namespace clmdep_msgpack {
                         input.segment = o.via.array.ptr[1].as<Segment>();
                         input.layer = Layer(o.via.array.ptr[2].as<uint8_t>());
                         std::string s=o.via.array.ptr[3].as<std::string>();
-                        if(s.size()>0) input.data=s.data();
+                        if(s.size()>0){
+                            input.data= static_cast<char *>(malloc(s.size() + 1));
+                            strcpy(input.data,s.data());
+                        }
                         return o;
                     }
                 };

@@ -31,6 +31,7 @@ class Server {
 
     ServerStatus runClientServerInternal(std::future<void> futureObj){
         std::string name="client_thread";
+        int count=0;
         pthread_setname_np(pthread_self(), name.c_str());
         std::vector<Event> events=std::vector<Event>();
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
@@ -41,7 +42,11 @@ class Server {
             if(events.size() > 0 && (events.size() >= MAX_PREFETCH_EVENTS)){
                 eventManager->handle(events);
                 events.clear();
+            }else{
+                if(count%10000==0)
+                printf("Server %d, No Events in Queue\n",CONF->my_rank_server);
             }
+            ++count;
 
         }
         return ServerStatus::SERVER_SUCCESS;
