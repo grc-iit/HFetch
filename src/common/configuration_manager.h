@@ -18,10 +18,12 @@ public:
     int ranks_per_server,num_workers;
     uint16_t my_server;
     DataPlacementEngineType dpeType;
+    double hit,total;
+
 
     ConfigurationManager():
     num_servers(1),is_server(false),ranks_per_server(1),my_server(0),my_rank_server(0),num_workers(1),
-    dpeType(DataPlacementEngineType::MAX_BW),server_comm(){
+    dpeType(DataPlacementEngineType::MAX_BW),server_comm(),hit(0.0),total(0.0){
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_world);
     }

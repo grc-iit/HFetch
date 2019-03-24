@@ -4,6 +4,9 @@
 
 #include <hfetch.h>
 #include <mpi.h>
+#include <src/common/macros.h>
+#include <src/common/configuration_manager.h>
+#include <src/common/singleton.h>
 #include "util.h"
 
 char* GenerateData(long size){
@@ -48,12 +51,13 @@ int main(int argc, char*argv[]){
     int iterations = 16;
     size_t small_io_size = my_rank_size/iterations;
     for(int i=0;i<iterations;i++){
-        printf("Iteration:%d\n",i);
         hfetch::fread(buf,small_io_size,1,fh);
         usleep(10000);
     }
     hfetch::fclose(fh);
     free(buf);
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("rank:%d hit ratio %f\n",my_rank,CONF->hit/(CONF->total*1.0));
     hfetch::MPI_Finalize();
     //clean_env(args);
     return 0;
