@@ -378,10 +378,6 @@ namespace std {
     };
 
 }
-static std::size_t hash_value(CharStruct  const& k){
-    std::string val(k.c_str());
-    return std::hash<std::string>()(val);
-}
 
 /**
  * MSGPACK Serialization
@@ -633,5 +629,22 @@ namespace clmdep_msgpack {
             }
     }
 }
+
+/**
+ * Outstream conversions
+ */
+
+std::ostream &operator<<(std::ostream &os, char const *m);
+std::ostream &operator<<(std::ostream &os, uint8_t const &m);
+std::ostream &operator<<(std::ostream &os, LayerInfo const &m);
+std::ostream &operator<<(std::ostream &os, InputArgs const &m);
+std::ostream &operator<<(std::ostream &os, CharStruct const &m);
+std::ostream &operator<<(std::ostream &os, Segment const &m);
+std::ostream &operator<<(std::ostream &os, SegmentScore const &m);
+std::ostream &operator<<(std::ostream &os, Event const &m);
+std::ostream &operator<<(std::ostream &os, Layer const &m);
+std::ostream &operator<<(std::ostream &os, PosixFile const &m);
+
+
 
 #endif //HFETCH_DATA_STRUCTURE_H

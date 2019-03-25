@@ -11,6 +11,12 @@ message(INFO " INSTALL_DIR ${INSTALL_DIR}")
 
 set(LIB_FLAGS -L${CMAKE_BINARY_DIR}/external/rpclib/ -lrpc  -L${INSTALL_DIR}/lib/ -lmpi -lpthread -lrt -lboost_filesystem )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INSTALL_DIR}/include/  -L${CMAKE_BINARY_DIR}/ -w")
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_DEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_TIMER")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_TRACE")
+
+
 include_directories(${INSTALL_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR})
@@ -24,6 +30,7 @@ set(HFETCH_COMMON_INT_SRC   src/common/singleton.h
                         src/common/distributed_ds/priority_queue/DistributedPriorityQueue.h
                         src/common/distributed_ds/queue/DistributedMessageQueue.h
                         src/common/constants.h
+                        src/common/debug.h
                         src/common/data_structure.h
                         src/common/configuration_manager.h
                         src/common/macros.h src/common/typedefs.h
@@ -36,7 +43,7 @@ set(HFETCH_COMMON_INT_SRC   src/common/singleton.h
                         src/common/io_clients/io_client.h
                         src/common/io_clients/data_manager.h
                         src/common/util.h
-)
+        src/common/debug.cpp)
 #Hfetch Server
 set(HFETCH_SERVER_INT_SRC
         src/server/server.cpp src/server/server.h

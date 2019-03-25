@@ -13,6 +13,7 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <src/common/singleton.h>
 #include <src/common/distributed_ds/communication/rpc_lib.h>
+#include <src/common/debug.h>
 
 namespace bip=boost::interprocess;
 typedef unsigned long long int really_long;
@@ -30,13 +31,15 @@ private:
     std::shared_ptr<RPC> rpc;
 public:
     ~GlobalClock(){
-        if(is_server) bip::shared_memory_object::remove(name.c_str());
+        AutoTrace trace = AutoTrace("~GlobalClock");
+        bip::shared_memory_object::remove(name.c_str());
     }
     GlobalClock(std::string name_,
                      bool is_server_,
                      uint16_t my_server_,
                      int num_servers_): is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
               comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(),func_prefix(name_){
+        AutoTrace trace = AutoTrace("GlobalClock",name_,is_server_,my_server_,num_servers_);
         MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
         name=name+"_"+std::to_string(my_server);
@@ -64,6 +67,7 @@ public:
     }
 
     HTime GetTime(){
+        AutoTrace trace = AutoTrace("GlobalClock::GetTime");
         boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(*mutex);
         auto t2 = std::chrono::high_resolution_clock::now();
         auto t =  std::chrono::duration_cast<std::chrono::microseconds>(
@@ -71,6 +75,7 @@ public:
         return t;
     }
     HTime GetTimeServer(uint16_t server){
+        AutoTrace trace = AutoTrace("GlobalClock::GetTimeServer",server);
         if(my_server==server){
             boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(*mutex);
             auto t2 = std::chrono::high_resolution_clock::now();
