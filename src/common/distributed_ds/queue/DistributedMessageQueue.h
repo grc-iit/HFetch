@@ -66,6 +66,7 @@ public:
             : is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
               comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(),
               queue(),func_prefix(name_){
+        AutoTrace trace = AutoTrace("DistributedMessageQueue(local)",name_,is_server_,my_server_,num_servers_);
         /* Initialize MPI rank and size of world */
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -111,10 +112,12 @@ public:
      */
     bool Push(MappedType data, uint16_t key_int){
         if(key_int == my_server){
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::Push(local)",data, key_int);
             bip::scoped_lock<bip::interprocess_mutex> lock(*mutex);
             queue->push_back(std::move(data));
             return true;
         }else{
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::Push(remote)",data, key_int);
             return rpc->call(key_int,func_prefix+"_Push", data).template as<bool>();
         }
     }
@@ -126,6 +129,7 @@ public:
      */
     std::pair<bool,MappedType> Pop(uint16_t key_int) {
         if (key_int == my_server) {
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::Pop(local)", key_int);
             bip::scoped_lock<bip::interprocess_mutex> lock(*mutex);
             if(queue->size()>0){
                 MappedType value = queue->front();
@@ -134,6 +138,7 @@ public:
             }
             return std::pair<bool,MappedType>(false,MappedType());;
         } else {
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::Pop(remote)", key_int);
             return rpc->call(key_int,func_prefix+"_Pop").template as<std::pair<bool, MappedType>>();
         }
     }
@@ -144,10 +149,12 @@ public:
      */
     size_t Size(uint16_t key_int) {
         if (key_int == my_server) {
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::Size(local)", key_int);
             bip::scoped_lock<bip::interprocess_mutex> lock(*mutex);
             size_t value= queue->size();
             return value;
         } else {
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::Size(remote)", key_int);
             return rpc->call(key_int,func_prefix+"_Size").template as<size_t>();;
         }
     }

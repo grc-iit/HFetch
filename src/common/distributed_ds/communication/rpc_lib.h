@@ -17,6 +17,7 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <src/common/data_structure.h>
+#include <src/common/debug.h>
 
 namespace bip = boost::interprocess;
 /* typedefs */
@@ -41,6 +42,7 @@ public:
     RPC(std::string name_,bool is_server_, uint16_t my_server_, int num_servers_):
     isInitialized(false),my_server(my_server_),is_server(is_server_),server_list(),server_port(RPC_PORT),
     num_servers(num_servers_),name(name_), memory_allocated(1024ULL * 1024ULL * 1024ULL),segment(){
+        AutoTrace trace = AutoTrace("RPC",name_,is_server_,my_server_,num_servers_);
         if(!isInitialized){
             int total_len;
             char *final_server_list;
@@ -129,6 +131,7 @@ public:
     }
 
     void run(size_t workers=1){
+        AutoTrace trace = AutoTrace("RPC::run",workers);
         if(is_server)
             server->async_run(workers);
     }
@@ -136,6 +139,8 @@ public:
     template <typename... Args>
     RPCLIB_MSGPACK::object_handle call(uint16_t server_index,std::string const &func_name,
                                                Args... args) {
+
+        AutoTrace trace = AutoTrace("RPC::call",server_index,func_name);
         int16_t port = server_port + server_index;
         /* Connect to Server */
         rpc::client client(server_list->at(server_index).c_str(), port);
@@ -145,6 +150,7 @@ public:
     template <typename... Args>
     std::future<RPCLIB_MSGPACK::object_handle> async_call(uint16_t server_index,std::string const &func_name,
                                        Args... args) {
+        AutoTrace trace = AutoTrace("RPC::async_call",server_index,func_name);
         int16_t port = server_port + server_index;
         /* Connect to Server */
         rpc::client client(server_list->at(server_index).c_str(), port);

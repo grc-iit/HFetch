@@ -71,7 +71,12 @@ std::ostream &operator<<(std::ostream &os, Layer const &m){
                 << "io_client_type:" << m.io_client_type<<"}";
 }
 std::ostream &operator<<(std::ostream &os, PosixFile const &m){
-    return os   << "{" << "filename:" << m.filename<< ","
+    return os   << "{" << "filename:" << m.filename << ","
                 << "segment:" << m.segment << ","
                 << "layer:" << m.layer << "}";
+}
+
+std::ostream &operator<<(std::ostream &os, std::pair<PosixFile,SegmentScore> const m){
+    return os   << "{" << "posix:" << m.first << ","
+                << "score:" << m.second << "}";
 }

@@ -72,6 +72,7 @@ public:
                             int num_servers_)
             : is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
               comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(), mymap(),func_prefix(name_){
+        AutoTrace trace = AutoTrace("DistributedMap",name_,is_server_,my_server_,num_servers_);
         /* Initialize MPI rank and size of world */
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -123,6 +124,7 @@ public:
         size_t key_hash = keyHash(key);
         uint16_t key_int = static_cast<uint16_t>(key_hash % num_servers);
         if(key_int == my_server){
+            AutoTrace trace = AutoTrace("DistributedMap::Put(local)",key,data);
             boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(*mutex);
             typename MyMap::iterator iterator = mymap->find(key);
             if (iterator != mymap->end()) {
@@ -131,6 +133,7 @@ public:
             mymap->insert(std::pair<KeyType,MappedType>(key, data));
             return true;
         }else{
+            AutoTrace trace = AutoTrace("DistributedMap::Put(remote)",key,data);
             return rpc->call(key_int,func_prefix+"_Put",key, data).template as<bool>();
         }
     }
@@ -144,6 +147,7 @@ public:
         size_t key_hash = keyHash(key);
         uint16_t key_int = key_hash % num_servers;
         if (key_int == my_server) {
+            AutoTrace trace = AutoTrace("DistributedMap::Get(local)",key);
             boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(*mutex);
             typename MyMap::iterator iterator = mymap->find(key);
             if (iterator != mymap->end()) {
@@ -152,6 +156,7 @@ public:
                 return std::pair<bool, MappedType>(false, MappedType());
             }
         } else {
+            AutoTrace trace = AutoTrace("DistributedMap::Get(remote)",key);
             return rpc->call(key_int,func_prefix+"_Get",key).template as<std::pair<bool, MappedType>>();
         }
     }
@@ -160,10 +165,12 @@ public:
         size_t key_hash = keyHash(key);
         uint16_t key_int = key_hash % num_servers;
         if (key_int == my_server) {
+            AutoTrace trace = AutoTrace("DistributedMap::Erase(local)",key);
             boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(*mutex);
             size_t s = mymap->erase(key);
             return std::pair<bool, MappedType>(s>0, MappedType());
         } else {
+            AutoTrace trace = AutoTrace("DistributedMap::Erase(remote)",key);
             return rpc->call(key_int,func_prefix+"_Erase",key).template as<std::pair<bool, MappedType>>();
         }
     }
@@ -175,6 +182,7 @@ public:
      *          and is present in value part else bool is set to false
      */
     std::vector<std::pair<KeyType,MappedType>> Contains(KeyType key) {
+        AutoTrace trace = AutoTrace("DistributedMap::Contains",key);
         std::vector<std::pair<KeyType,MappedType>> final_values=std::vector<std::pair<KeyType,MappedType>>();
         auto current_server=ContainsInServer(key);
         final_values.insert(final_values.end(),current_server.begin(),current_server.end());
@@ -189,6 +197,7 @@ public:
     }
 
     std::vector<std::pair<KeyType,MappedType>> GetAllData() {
+        AutoTrace trace = AutoTrace("DistributedMap::GetAllData");
         std::vector<std::pair<KeyType,MappedType>> final_values=std::vector<std::pair<KeyType,MappedType>>();
         auto current_server=GetAllDataInServer();
         final_values.insert(final_values.end(),current_server.begin(),current_server.end());
@@ -203,6 +212,7 @@ public:
     }
 
     std::vector<std::pair<KeyType,MappedType>> ContainsInServer(KeyType key) {
+        AutoTrace trace = AutoTrace("DistributedMap::ContainsInServer",key);
         std::vector<std::pair<KeyType,MappedType>> final_values = std::vector<std::pair<KeyType,MappedType>>();
         {
             boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(*mutex);
@@ -235,6 +245,7 @@ public:
         return final_values;
     }
     std::vector<std::pair<KeyType,MappedType>> GetAllDataInServer() {
+        AutoTrace trace = AutoTrace("DistributedMap::GetAllDataInServer");
         std::vector<std::pair<KeyType,MappedType>> final_values = std::vector<std::pair<KeyType,MappedType>>();
         {
             boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(*mutex);

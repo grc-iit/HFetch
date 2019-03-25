@@ -14,10 +14,12 @@ private:
     std::shared_ptr<FileSegmentAuditor> fileSegmentAuditor;
 public:
     DataManager(){
+        AutoTrace trace = AutoTrace("DataManager");
         ioFactory = Singleton<IOClientFactory>::GetInstance();
         fileSegmentAuditor = Singleton<FileSegmentAuditor>::GetInstance();
     }
     ServerStatus Move(PosixFile source, PosixFile destination, bool deleteSource = true) {
+        AutoTrace trace = AutoTrace("DataManager::Move",source,destination,deleteSource);
         destination.data.reserve(source.GetSize());
         ServerStatus status;
         status = ioFactory->GetClient(source.layer.io_client_type)->Read(source,destination);
@@ -30,16 +32,19 @@ public:
     }
 
     ServerStatus Prefetch(PosixFile source, PosixFile destination) {
+        AutoTrace trace = AutoTrace("DataManager::Prefetch",source,destination);
         return Move(source,destination,source.layer!=*Layer::LAST);
     }
 
     bool HasCapacity(long amount, Layer layer){
+        AutoTrace trace = AutoTrace("DataManager::HasCapacity",amount,layer);
         double remaining_capacity = layer.capacity_mb_*MB-ioFactory->GetClient(layer.io_client_type)->GetCurrentUsage(layer);
         remaining_capacity = remaining_capacity<0?0:remaining_capacity;
         return remaining_capacity >= amount;
     }
 
     ServerStatus MakeCapacity(long amount, double score, Layer layer){
+        AutoTrace trace = AutoTrace("DataManager::MakeCapacity",amount,score,layer);
         /* if layer can fit it not return error */
         if(!CanFit(amount,layer)) return ServerStatus::SERVER_FAILED;
         /* Last layer always has space */
@@ -96,6 +101,7 @@ public:
         return ServerStatus::SERVER_SUCCESS;
     }
     std::vector<PosixFile> Split(PosixFile file, long remaining_capacity) {
+        AutoTrace trace = AutoTrace("DataManager::Split",file,remaining_capacity);
         std::vector<PosixFile> pieces=std::vector<PosixFile>();
         PosixFile p1=file;
         p1.segment.end = p1.segment.start + remaining_capacity - 1;
@@ -106,10 +112,12 @@ public:
         return pieces;
     }
     ServerStatus CanFit(long amount, Layer layer){
+        AutoTrace trace = AutoTrace("DataManager::CanFit",amount,layer);
         /* Last layer can always fit and for others check capacity*/
         return layer == *Layer::LAST || layer.capacity_mb_*MB >= amount?ServerStatus::SERVER_SUCCESS:ServerStatus::SERVER_FAILED;
     }
     CharStruct GenerateBufferFilename() {
+        AutoTrace trace = AutoTrace("DataManager::GenerateBufferFilename");
         /* use timestamp to generate unique file names. */
         struct timeval tp;
         gettimeofday(&tp, NULL);

@@ -90,6 +90,7 @@ std::cout << "DBG: " << __FILE__ << "(" << __LINE__ << ") "\
 #include <chrono>
 #include <mpi.h>
 #include <string>
+#include <sstream>
 
 class Timer {
 public:
@@ -105,6 +106,25 @@ public:
 private:
     std::chrono::high_resolution_clock::time_point t1;
 };
+
+template <std::size_t I>
+struct wrapper
+{
+    static constexpr std::size_t n = I;
+};
+
+template <class Func, std::size_t ...Is>
+constexpr void static_for_impl( Func &&f, std::index_sequence<Is...> )
+{
+    ( f( wrapper<Is>{} ),... );
+}
+
+template <std::size_t N, class Func>
+constexpr void static_for( Func &&f )
+{
+    static_for_impl( f, std::make_index_sequence<N>{ } );
+}
+
 /**
  * Implement Auto tracing Mechanism.
  */
@@ -113,32 +133,32 @@ class AutoTrace
 {
     Timer timer;
     static int rank,item;
+
 public:
     template <typename... Args>
     AutoTrace(std::string string,Args... args):m_line(string)
     {
+        std::stringstream stream;
         if(rank == -1) MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        cout <<++item<<". Rank: "<< rank << " " <<m_line << " - start ";
+        stream <<++item<<". Rank: "<< rank << " " <<m_line << " - start ";
 #endif
 #ifdef HERMES_TRACE
         auto args_obj = std::make_tuple(args...);
-        auto args_size = std::tuple_size<decltype(args_obj)>::value;
-        cout << "args(";
-        if(args_size == 0) cout << "Void";
+        const ulong args_size = std::tuple_size<decltype(args_obj)>::value;
+        stream << "args(";
+
+        if(args_size == 0) stream << "Void";
         else{
-            for(int i=0;i<args_size;++i){
-                if(i!=args_size-1){
-                    cout<<std::get<i>(args_obj)<<", ";
-                }else{
-                    cout<<std::get<i>(args_obj);
-                }
-            }
+            static_for<args_size>( [&](auto w){
+                    stream << std::get<w.n>(args_obj) << ", ";
+            });
         }
-        cout << ")";
+        stream << ")";
 #endif
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        cout << endl;
+        stream << endl;
+        cout << stream.str();
 #endif
 #ifdef HERMES_TIMER
         timer.startTime();
@@ -147,15 +167,17 @@ public:
 
     ~AutoTrace()
     {
+        std::stringstream stream;
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        cout <<"Rank: "<< rank << " " << m_line << " - finish";
+        stream <<"Rank: "<< rank << " " << m_line << " - finish";
 #endif
 #ifdef HERMES_TIMER
         double end_time=timer.endTime();
-        cout  <<" "<<end_time<<" msecs"<< endl;
+        stream  <<" "<<end_time<<" msecs"<< endl;
 #endif
 #ifdef HERMES_TRACE
-        cout  << endl;
+        stream  << endl;
+        cout << stream.str();
 #endif
     }
 private:

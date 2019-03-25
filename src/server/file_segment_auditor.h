@@ -58,7 +58,6 @@ public:
             }
             MPI_Barrier(MPI_COMM_WORLD);
         }
-
     }
 
     ServerStatus Update(std::vector<Event> events);

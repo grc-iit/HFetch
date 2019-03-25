@@ -52,7 +52,7 @@ typedef unsigned long long int really_long;
         /** Class Typedefs for ease of use **/
         typedef std::pair<const KeyType, MappedType> ValueType;
         typedef boost::interprocess::allocator<ValueType, boost::interprocess::managed_shared_memory::segment_manager> ShmemAllocator;
-        typedef boost::unordered_map<KeyType, MappedType, boost::hash<KeyType>, std::equal_to<KeyType>, ShmemAllocator> MyHashMap;
+        typedef boost::unordered_map<KeyType, MappedType, std::hash<KeyType>, std::equal_to<KeyType>, ShmemAllocator> MyHashMap;
         /** Class attributes**/
         int comm_size, my_rank,num_servers;
         uint16_t  my_server;
@@ -95,7 +95,7 @@ typedef unsigned long long int really_long;
                 ShmemAllocator alloc_inst(segment.get_segment_manager());
                 mutex = segment.construct<boost::interprocess::interprocess_mutex>("mtx")();
                 /* Construct Hashmap in the shared memory space. */
-                myHashMap = segment.construct<MyHashMap>(name.c_str())(128, boost::hash<KeyType>(), std::equal_to<KeyType>(), segment.get_allocator<ValueType>());
+                myHashMap = segment.construct<MyHashMap>(name.c_str())(128, std::hash<KeyType>(), std::equal_to<KeyType>(), segment.get_allocator<ValueType>());
                 /* Create a RPC server and map the methods to it. */
                 std::function<bool(KeyType, MappedType)> putFunc(
                         std::bind(&DistributedHashMap<KeyType, MappedType>::Put, this, std::placeholders::_1,

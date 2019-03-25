@@ -635,6 +635,7 @@ namespace clmdep_msgpack {
  */
 
 std::ostream &operator<<(std::ostream &os, char const *m);
+std::ostream &operator<<(std::ostream &os, std::pair<PosixFile,SegmentScore> const m);
 std::ostream &operator<<(std::ostream &os, uint8_t const &m);
 std::ostream &operator<<(std::ostream &os, LayerInfo const &m);
 std::ostream &operator<<(std::ostream &os, InputArgs const &m);
