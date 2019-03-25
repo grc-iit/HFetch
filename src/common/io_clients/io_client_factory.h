@@ -13,10 +13,12 @@
 class IOClientFactory{
 public:
     IOClientFactory(){
+        AutoTrace trace = AutoTrace("IOClientFactory");
         Singleton<FileClient>::GetInstance();
         Singleton<MemoryClient>::GetInstance();
     }
     std::shared_ptr<IOClient> GetClient(IOClientType type){
+        AutoTrace trace = AutoTrace("GetClient",type);
         switch(type){
             case IOClientType::POSIX_FILE:{
                 return Singleton<FileClient>::GetInstance();

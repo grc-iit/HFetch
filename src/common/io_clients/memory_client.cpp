@@ -5,9 +5,9 @@
 #include "memory_client.h"
 
 ServerStatus MemoryClient::Read(PosixFile &source, PosixFile &destination) {
-
     std::size_t hash_val = std::hash<CharStruct>()(source.filename)%CONF->num_servers;
     if(hash_val == CONF->my_server){
+        AutoTrace trace = AutoTrace("MemoryClient::Read(local)",source,destination);
         auto iter = data_map.Get(source.filename);
         if(iter.first){
             auto shm = new bip::managed_shared_memory(bip::open_only, iter.second.filename.c_str());
@@ -16,6 +16,7 @@ ServerStatus MemoryClient::Read(PosixFile &source, PosixFile &destination) {
             return SERVER_SUCCESS;
         }
     }else{
+        AutoTrace trace = AutoTrace("MemoryClient::Read(remote)",source,destination);
         return rpc->call(hash_val,MEMORY_CLIENT+"_Read",source,destination).template as<ServerStatus>();
     }
     return SERVER_FAILED;
@@ -24,6 +25,7 @@ ServerStatus MemoryClient::Read(PosixFile &source, PosixFile &destination) {
 ServerStatus MemoryClient::Write(PosixFile &source, PosixFile &destination) {
     std::size_t hash_val = std::hash<CharStruct>()(source.filename)%CONF->num_servers;
     if(hash_val == CONF->my_server){
+        AutoTrace trace = AutoTrace("MemoryClient::Write(local)",source,destination);
         auto iter = data_map.Get(destination.filename);
         if(iter.first){
             if(iter.second.GetSize() == source.GetSize() && source.segment.start == 0) {
@@ -71,6 +73,7 @@ ServerStatus MemoryClient::Write(PosixFile &source, PosixFile &destination) {
         }
         return SERVER_SUCCESS;
     }else{
+        AutoTrace trace = AutoTrace("MemoryClient::Write(remote)",source,destination);
         return rpc->call(hash_val,MEMORY_CLIENT+"_Write",source,destination).template as<ServerStatus>();
     }
 }
@@ -78,6 +81,7 @@ ServerStatus MemoryClient::Write(PosixFile &source, PosixFile &destination) {
 ServerStatus MemoryClient::Delete(PosixFile file) {
     std::size_t hash_val = std::hash<CharStruct>()(file.filename)%CONF->num_servers;
     if(hash_val == CONF->my_server){
+        AutoTrace trace = AutoTrace("MemoryClient::Delete(local)",file);
         auto iter = data_map.Get(file.filename);
         if(iter.first){
             if(iter.second.GetSize() == file.GetSize() && file.segment.start == 0) {
@@ -96,12 +100,14 @@ ServerStatus MemoryClient::Delete(PosixFile file) {
         }
         return SERVER_SUCCESS;
     }else{
+        AutoTrace trace = AutoTrace("MemoryClient::Delete(remote)",file);
         return rpc->call(hash_val,MEMORY_CLIENT+"_Delete",file).template as<ServerStatus>();
     }
 
 }
 
-double MemoryClient::GetCurrentUsage(Layer l) {
+double MemoryClient::GetCurrentUsage(Layer layer) {
+    AutoTrace trace = AutoTrace("MemoryClient::GetCurrentUsage",layer);
     auto datas = data_map.GetAllData();
     double total=0.0;
     for(auto data:datas){

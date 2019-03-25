@@ -22,6 +22,7 @@ class EventManager {
     std::shared_ptr<IOClientFactory> ioFactory;
 public:
     EventManager(){
+        AutoTrace trace = AutoTrace("EventManager");
         ioFactory = Singleton<IOClientFactory>::GetInstance();
         auditor = Singleton<FileSegmentAuditor>::GetInstance();
         dpe = Singleton<DPEFactory>::GetInstance()->GetEngine(CONF->dpeType);

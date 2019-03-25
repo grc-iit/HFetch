@@ -6,6 +6,7 @@
 #include <tuple>
 
 std::vector<std::tuple<PosixFile, PosixFile,double>> MaxBandwidthDPE::place(std::vector<Event> events) {
+    AutoTrace trace = AutoTrace("MaxBandwidthDPE::place",events);
     auto layerScore = fileSegmentAuditor->FetchLayerScores();
     auto total_placements = std::vector<std::tuple<PosixFile, PosixFile,double>>();
     for(auto event:events){
@@ -24,19 +25,12 @@ std::vector<std::tuple<PosixFile, PosixFile,double>> MaxBandwidthDPE::place(std:
     return total_placements;
 }
 
-CharStruct MaxBandwidthDPE::GenerateBufferFilename() {
-    /* use timestamp to generate unique file names. */
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    long int us = tp.tv_sec * 1000000 + tp.tv_usec;
-    return CharStruct(std::to_string(us) + ".h5");
-}
-
 std::vector<std::tuple<PosixFile, PosixFile,double>>
 MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple,
                         const std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>>* layerScore,
                         Layer* layer,
                         long original_index) {
+    AutoTrace trace = AutoTrace("MaxBandwidthDPE::solve",std::get<0>(segment_tuple),std::get<1>(segment_tuple),std::get<2>(segment_tuple),*layer);
     double remaining_capacity=layer->capacity_mb_*MB-ioFactory->GetClient(layer->io_client_type)->GetCurrentUsage(*layer);
     remaining_capacity=remaining_capacity<0?0:remaining_capacity;
     auto final_vector = std::vector<std::tuple<PosixFile, PosixFile,double>>();
@@ -62,7 +56,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
             PosixFile source = current_file;
             PosixFile destination = source;
             destination.layer=*layer;
-            if(current_file.layer == *Layer::LAST) destination.filename = GenerateBufferFilename();
+            if(current_file.layer == *Layer::LAST) destination.filename = dataManager->GenerateBufferFilename();
             destination.segment.start = 0;
             destination.segment.end = source.GetSize() - 1;
             source.segment.start = original_index;
@@ -93,7 +87,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
                 PosixFile source = current_file;
                 PosixFile destination = source;
                 destination.layer=*layer;
-                if(current_file.layer == *Layer::LAST) destination.filename = GenerateBufferFilename();
+                if(current_file.layer == *Layer::LAST) destination.filename = dataManager->GenerateBufferFilename();
                 destination.segment.start = 0;
                 destination.segment.end = source.GetSize() - 1;
                 source.segment.start = original_index;
@@ -102,7 +96,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
                 final_vector.push_back(std::tuple<PosixFile, PosixFile,double>(source,destination,score));
             }else{
                 /* case 2 */
-                std::vector<PosixFile> pieces = Split(current_file,space_avail);
+                std::vector<PosixFile> pieces = dataManager->Split(current_file,space_avail);
                 if(current_file.layer != *layer){
                     PosixFile source = pieces[0];
                     PosixFile destination = source;
@@ -112,7 +106,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
                     source.segment.start = original_index;
                     source.segment.end = original_index + source.GetSize() - 1;
                     original_index = source.segment.end + 1;
-                    if(current_file.layer == *Layer::LAST) destination.filename = GenerateBufferFilename();
+                    if(current_file.layer == *Layer::LAST) destination.filename = dataManager->GenerateBufferFilename();
                     final_vector.push_back(std::tuple<PosixFile, PosixFile,double>(source,destination,score));
                 }
                 auto sub_problem = solve(std::tuple<Segment,SegmentScore,PosixFile>(pieces[1].segment,score_obj,pieces[1]),layerScore,layer->next,original_index);
@@ -129,16 +123,7 @@ MaxBandwidthDPE::solve(std::tuple<Segment,SegmentScore, PosixFile> segment_tuple
 }
 
 bool MaxBandwidthDPE::IsAllowed(double score, double min_score, double max_score) {
+    AutoTrace trace = AutoTrace("MaxBandwidthDPE::IsAllowed",score,min_score,max_score);
     return score > min_score;
 }
 
-std::vector<PosixFile> MaxBandwidthDPE::Split(PosixFile file, long remaining_capacity) {
-    std::vector<PosixFile> pieces=std::vector<PosixFile>();
-    PosixFile p1=file;
-    p1.segment.end = p1.segment.start + remaining_capacity - 1;
-    PosixFile p2=file;
-    p2.segment.start = p1.segment.start + remaining_capacity;
-    pieces.push_back(p1);
-    pieces.push_back(p2);
-    return pieces;
-}

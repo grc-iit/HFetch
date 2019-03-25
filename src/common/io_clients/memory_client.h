@@ -24,6 +24,7 @@ private:
     const std::string MEMORY_CLIENT="MEMORY_CLIENT";
 public:
     MemoryClient():data_map("DATA_MAP",CONF->is_server,CONF->my_server,CONF->num_servers){
+        AutoTrace trace = AutoTrace("MemoryClient");
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->num_servers);
         if(CONF->is_server){
             std::function<ServerStatus(PosixFile&,PosixFile&)> readFunc(std::bind(&MemoryClient::Read, this, std::placeholders::_1, std::placeholders::_2));
@@ -37,8 +38,7 @@ public:
     ServerStatus Read(PosixFile &source, PosixFile &destination) override;
     ServerStatus Write(PosixFile &source, PosixFile &destination) override;
     ServerStatus Delete(PosixFile file) override;
-
-    double GetCurrentUsage(Layer l) override;
+    double GetCurrentUsage(Layer layer) override;
 };
 
 

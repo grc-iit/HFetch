@@ -5,4 +5,4 @@
 #include "debug.h"
 
 int AutoTrace::rank=-1;
-int AutoTrace::item=-1;
+int AutoTrace::item=0;

@@ -6,6 +6,8 @@
 
 
 ServerStatus FileSegmentAuditor::Update(std::vector<Event> events) {
+
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::Update",events);
     for(auto event : events){
         switch(event.event_type){
             case EventType::FILE_OPEN:{
@@ -30,6 +32,7 @@ ServerStatus FileSegmentAuditor::Update(std::vector<Event> events) {
 }
 
 ServerStatus FileSegmentAuditor::UpdateOnMove(PosixFile source, PosixFile destination) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::UpdateOnMove",source,destination);
     auto iter = file_segment_map.find(source.filename);
     if(iter != file_segment_map.end()){
         std::shared_ptr<SegmentMap> multiMapScore = iter->second;
@@ -72,6 +75,7 @@ ServerStatus FileSegmentAuditor::UpdateOnMove(PosixFile source, PosixFile destin
 }
 
 ServerStatus FileSegmentAuditor::MarkFileSegmentsActive(Event event) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::MarkFileSegmentsActive",event);
     auto iter = file_active_status.Get(event.filename);
     if(iter.first){
         file_active_status.Put(event.filename,iter.second + 1);
@@ -82,6 +86,7 @@ ServerStatus FileSegmentAuditor::MarkFileSegmentsActive(Event event) {
 }
 
 ServerStatus FileSegmentAuditor::MarkFileSegmentsInactive(Event event) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::MarkFileSegmentsInactive",event);
     auto iter = file_active_status.Get(event.filename);
     if(iter.first){
         file_active_status.Put(event.filename,iter.second - 1);
@@ -90,6 +95,7 @@ ServerStatus FileSegmentAuditor::MarkFileSegmentsInactive(Event event) {
 }
 
 ServerStatus FileSegmentAuditor::IncreaseFileSegmentFrequency(Event event) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::IncreaseFileSegmentFrequency",event);
     auto iter = file_segment_map.find(event.filename);
     if(iter != file_segment_map.end()){
         std::shared_ptr<SegmentMap> multiMapScore = iter->second;
@@ -137,6 +143,7 @@ ServerStatus FileSegmentAuditor::IncreaseFileSegmentFrequency(Event event) {
 }
 
 ServerStatus FileSegmentAuditor::CreateOffsetMap(Event event) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::CreateOffsetMap",event);
     auto file_iter = file_segment_map.find(event.filename);
     if(file_iter == file_segment_map.end()){
         std::string name(event.filename.c_str());
@@ -166,6 +173,7 @@ ServerStatus FileSegmentAuditor::CreateOffsetMap(Event event) {
 }
 
 std::vector<std::tuple<Segment,SegmentScore, PosixFile>> FileSegmentAuditor::FetchHeatMap(PosixFile file) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::FetchHeatMap",file);
     typedef std::multimap<SegmentScore,std::pair<Segment,PosixFile>> MM;
     typedef std::vector<std::tuple<Segment,SegmentScore, PosixFile>> VT;
     VT vector_tuple=VT();
@@ -186,6 +194,7 @@ std::vector<std::tuple<Segment,SegmentScore, PosixFile>> FileSegmentAuditor::Fet
 }
 
 std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>> FileSegmentAuditor::FetchLayerScores() {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::FetchLayerScores");
     auto allDatas=layer_score_map.GetAllData();
     auto return_map=std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>>();
     for(auto data:allDatas){
@@ -195,6 +204,7 @@ std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::great
 }
 
 std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocation(PosixFile file) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::GetDataLocation",file);
     std::vector<std::pair<PosixFile, PosixFile>> values = std::vector<std::pair<PosixFile, PosixFile>>();
     auto iter = valid_buffered_dataset.Get(file.filename);
     long original_start=0;
@@ -217,11 +227,9 @@ std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocation
     return values;
 }
 
-std::vector<std::pair<PosixFile, PosixFile>> FileSegmentAuditor::GetDataLocationServer(PosixFile file,uint16_t server) {
-    return rpc->call(server,FILE_SEGMENT_AUDITOR+"_GetDataLocation",file).template as<std::vector<std::pair<PosixFile, PosixFile>>>();;
-}
 
 bool FileSegmentAuditor::CheckIfFileActive(PosixFile file) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::CheckIfFileActive",file);
     auto iter = file_active_status.Get(file.filename);
     if(iter.first){
         return iter.second != 0;
@@ -230,6 +238,7 @@ bool FileSegmentAuditor::CheckIfFileActive(PosixFile file) {
 }
 
 ServerStatus FileSegmentAuditor::CallCreateOffsetRPC(uint16_t server, Event event) {
+    AutoTrace trace = AutoTrace("FileSegmentAuditor::CallCreateOffsetRPC",server,event);
     rpc->call(server,FILE_SEGMENT_AUDITOR+"_CreateOffsetMap",event);
     return SERVER_SUCCESS;
 }

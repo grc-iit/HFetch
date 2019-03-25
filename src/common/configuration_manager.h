@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <mpi.h>
 #include "data_structure.h"
+#include "debug.h"
 
 class ConfigurationManager {
 public:
@@ -25,15 +26,18 @@ public:
     ConfigurationManager():
     num_servers(1),is_server(false),ranks_per_server(1),my_server(0),my_rank_server(0),num_workers(1),
     dpeType(DataPlacementEngineType::MAX_BW),server_comm(),hit(0.0),total(0.0),max_num_files(1){
+        AutoTrace trace = AutoTrace("ConfigurationManager");
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_world);
         max_num_files=comm_size;
     }
     void UpdateServerComm(){
+        AutoTrace trace = AutoTrace("ConfigurationManager::UpdateServerComm");
         MPI_Comm_split(MPI_COMM_WORLD, is_server, my_rank_world, &server_comm);
         if(is_server) MPI_Comm_rank(server_comm, &my_rank_server);
     }
     void BuildLayers(LayerInfo* layers,size_t count){
+        AutoTrace trace = AutoTrace("ConfigurationManager::BuildLayers",count);
         Layer* current_layer=NULL;
         Layer* previous_layer=NULL;
         for(int order=0;order<count;order++){

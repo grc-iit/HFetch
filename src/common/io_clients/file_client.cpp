@@ -5,6 +5,7 @@
 #include "file_client.h"
 
 ServerStatus FileClient::Read(PosixFile &source, PosixFile &destination) {
+    AutoTrace trace = AutoTrace("FileClient::Read",source,destination);
     std::string file_path=std::string(source.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(source.filename.c_str());
     FILE* fh = fopen(file_path.c_str(),"r");
     fseek(fh,source.segment.start,SEEK_SET);
@@ -17,6 +18,7 @@ ServerStatus FileClient::Read(PosixFile &source, PosixFile &destination) {
 }
 
 ServerStatus FileClient::Write(PosixFile &source, PosixFile &destination) {
+    AutoTrace trace = AutoTrace("FileClient::Write",source,destination);
     std::string file_path=std::string(destination.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(destination.filename.c_str());
     FILE* fh = fopen(file_path.c_str(),"r+");
     if(fh==NULL){
@@ -30,6 +32,7 @@ ServerStatus FileClient::Write(PosixFile &source, PosixFile &destination) {
 }
 
 ServerStatus FileClient::Delete(PosixFile file) {
+    AutoTrace trace = AutoTrace("FileClient::Delete",file);
     hasChanged.Put(file.layer.id_,true);
     std::string file_path=std::string(file.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(file.filename.c_str());
     FILE* fh = fopen(file_path.c_str(),"r");
@@ -50,15 +53,16 @@ ServerStatus FileClient::Delete(PosixFile file) {
     return SERVER_SUCCESS;
 }
 
-double FileClient::GetCurrentUsage(Layer l) {
-    auto capacity_iter=layerCapacity.Get(l.id_);
+double FileClient::GetCurrentUsage(Layer layer) {
+    AutoTrace trace = AutoTrace("FileClient::GetCurrentUsage",layer);
+    auto capacity_iter=layerCapacity.Get(layer.id_);
     if(capacity_iter.first){
-        auto changed_iter=hasChanged.Get(l.id_);
+        auto changed_iter=hasChanged.Get(layer.id_);
         if(!changed_iter.first || !changed_iter.second){
             return capacity_iter.second;
         }
     }
-    std::string cmd="du -s "+std::string(l.layer_loc.c_str())+" | awk {'print$1'}";
+    std::string cmd="du -s "+std::string(layer.layer_loc.c_str())+" | awk {'print$1'}";
     FILE *fp;
     std::array<char, 128> buffer;
     std::string result;
@@ -73,7 +77,7 @@ double FileClient::GetCurrentUsage(Layer l) {
     }
     auto size=std::stoll(result)-4;
     pclose(pipe);
-    layerCapacity.Put(l.id_,size);
-    hasChanged.Put(l.id_,false);
+    layerCapacity.Put(layer.id_,size);
+    hasChanged.Put(layer.id_,false);
     return size;
 }

@@ -7,15 +7,18 @@
 
 
 #include <src/server/file_segment_auditor.h>
+#include <src/common/io_clients/data_manager.h>
 #include "dpe.h"
 
 class MaxBandwidthDPE: public DPE {
     std::shared_ptr<FileSegmentAuditor> fileSegmentAuditor;
     std::shared_ptr<IOClientFactory> ioFactory;
+    std::shared_ptr<DataManager> dataManager;
 public:
     MaxBandwidthDPE(){
         fileSegmentAuditor = Singleton<FileSegmentAuditor>::GetInstance();
         ioFactory = Singleton<IOClientFactory>::GetInstance();
+        dataManager = Singleton<DataManager>::GetInstance();
     }
     std::vector<std::tuple<PosixFile, PosixFile,double>> place(std::vector<Event> events) override;
 
@@ -24,11 +27,7 @@ public:
                                                        Layer* layer,
                                                        long original_index=0);
 
-    CharStruct GenerateBufferFilename();
-
     bool IsAllowed(double score, double min_score, double max_score);
-
-    std::vector<PosixFile> Split(PosixFile segment, long d);
 };
 
 

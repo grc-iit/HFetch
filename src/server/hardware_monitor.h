@@ -77,6 +77,8 @@ class HardwareMonitor {
     }
 public:
     HardwareMonitor():num_monitors(0),event_queue("HARDWARE_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers){
+
+        AutoTrace trace = AutoTrace("HardwareMonitor");
         Layer* current=Layer::FIRST;
         while(current != nullptr){
             if(current->io_client_type == IOClientType::POSIX_FILE){
@@ -86,6 +88,7 @@ public:
         }
     }
     ServerStatus AsyncMonitor(){
+        AutoTrace trace = AutoTrace("HardwareMonitor::AsyncMonitor");
         monitor_threads = new std::thread[num_monitors];
         monitor__exit_signal = new std::promise<void>[num_monitors];
         Layer* current=Layer::FIRST;
@@ -104,6 +107,7 @@ public:
     }
     std::vector<Event> FetchEvents();
     void Stop(){
+        AutoTrace trace = AutoTrace("HardwareMonitor::Stop");
         for (int i = 0; i < num_monitors; ++i) {
             /* Issue server kill signals */
             monitor__exit_signal[i].set_value();

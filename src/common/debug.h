@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <execinfo.h>
 #include <tuple>
+#include "data_structure.h"
 
 
 /**
@@ -107,23 +108,7 @@ private:
     std::chrono::high_resolution_clock::time_point t1;
 };
 
-template <std::size_t I>
-struct wrapper
-{
-    static constexpr std::size_t n = I;
-};
 
-template <class Func, std::size_t ...Is>
-constexpr void static_for_impl( Func &&f, std::index_sequence<Is...> )
-{
-    ( f( wrapper<Is>{} ),... );
-}
-
-template <std::size_t N, class Func>
-constexpr void static_for( Func &&f )
-{
-    static_for_impl( f, std::make_index_sequence<N>{ } );
-}
 
 /**
  * Implement Auto tracing Mechanism.
@@ -139,9 +124,13 @@ public:
     AutoTrace(std::string string,Args... args):m_line(string)
     {
         std::stringstream stream;
+        stream << "\033[31m";
         if(rank == -1) MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        stream <<++item<<". Rank: "<< rank << " " <<m_line << " - start ";
+        stream <<++item<<";"<< rank << ";" <<m_line << ";";
+#endif
+#if  defined(HERMES_TIMER)
+        stream <<";;";
 #endif
 #ifdef HERMES_TRACE
         auto args_obj = std::make_tuple(args...);
@@ -154,10 +143,11 @@ public:
                     stream << std::get<w.n>(args_obj) << ", ";
             });
         }
-        stream << ")";
+        stream << ");";
 #endif
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        stream << endl;
+        stream <<"start"<< endl;
+        stream << "\033[00m";
         cout << stream.str();
 #endif
 #ifdef HERMES_TIMER
@@ -168,15 +158,20 @@ public:
     ~AutoTrace()
     {
         std::stringstream stream;
+        stream << "\033[31m";
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        stream <<"Rank: "<< rank << " " << m_line << " - finish";
+        stream <<item-- <<";"<< rank << ";" << m_line << ";";
+#endif
+#if defined(HERMES_TRACE)
+        stream  <<";";
 #endif
 #ifdef HERMES_TIMER
         double end_time=timer.endTime();
-        stream  <<" "<<end_time<<" msecs"<< endl;
+        stream  <<end_time<<";msecs;";
 #endif
-#ifdef HERMES_TRACE
-        stream  << endl;
+#if defined(HERMES_TRACE) || defined(HERMES_TIMER)
+        stream  <<"finish"<< endl;
+        stream << "\033[00m";
         cout << stream.str();
 #endif
     }

@@ -35,6 +35,7 @@ class Server {
         pthread_setname_np(pthread_self(), name.c_str());
         std::vector<Event> events=std::vector<Event>();
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
+            app_event_queue.WaitForElement(CONF->my_server);
             auto result = app_event_queue.Pop(CONF->my_server);
             if(result.first){
                 events.push_back(result.second);
@@ -70,6 +71,7 @@ class Server {
     }
 public:
     static InputArgs InitializeServer(int argc, char *argv[]){
+        AutoTrace trace = AutoTrace("Server::InitializeServer");
         InputArgs args = parse_opts(argc,argv);
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
@@ -85,6 +87,7 @@ public:
     }
 
     static InputArgs InitializeClients(int argc, char *argv[]){
+        AutoTrace trace = AutoTrace("Server::InitializeClients");
         InputArgs args = parse_opts(argc,argv);
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
@@ -103,6 +106,7 @@ public:
     Server(size_t num_workers_=1):num_workers(num_workers_),
     app_event_queue("APPLICATION_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
     clock("GLOBAL_CLOCK",CONF->is_server,CONF->my_server,CONF->num_servers){
+        AutoTrace trace = AutoTrace("Server",num_workers_);
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->comm_size);
         if(CONF->is_server){
             rpc->run(CONF->num_workers);
@@ -116,6 +120,7 @@ public:
     }
 
     ServerStatus async_run(size_t numWorker=1){
+        AutoTrace trace = AutoTrace("Server::async_run",numWorker);
         num_workers=numWorker;
         if(numWorker > 0){
             client_server_workers=new std::thread[numWorker];
@@ -132,15 +137,18 @@ public:
     }
 
     std::vector<std::pair<PosixFile,PosixFile>> GetDataLocation(PosixFile file){
+        AutoTrace trace = AutoTrace("Server::GetDataLocation",file);
         return auditor->GetDataLocation(file);
     }
 
-    ServerStatus pushEvents(Event e){
-        e.time = clock.GetTimeServer(CONF->my_server);
-        app_event_queue.Push(e,CONF->my_server);
+    ServerStatus pushEvents(Event event){
+        AutoTrace trace = AutoTrace("Server::pushEvents",event);
+        event.time = clock.GetTimeServer(CONF->my_server);
+        app_event_queue.Push(event,CONF->my_server);
     }
 
     void stop(){
+        AutoTrace trace = AutoTrace("Server::stop");
         for (int i = 0; i < num_workers; ++i) {
             /* Issue server kill signals */
             monitor_server_exit_signal[i].set_value();

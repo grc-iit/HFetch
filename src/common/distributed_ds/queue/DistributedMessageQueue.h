@@ -86,8 +86,10 @@ public:
             std::function<bool(MappedType,uint16_t)> pushFunc(std::bind(&DistributedMessageQueue<MappedType>::Push, this, std::placeholders::_1, std::placeholders::_2));
             std::function<std::pair<bool,MappedType>(uint16_t)> popFunc(std::bind(&DistributedMessageQueue::Pop, this, std::placeholders::_1));
             std::function<size_t(uint16_t)> sizeFunc(std::bind(&DistributedMessageQueue::Size, this, std::placeholders::_1));
+            std::function<bool(uint16_t)> waitForElementFunc(std::bind(&DistributedMessageQueue::WaitForElement, this, std::placeholders::_1));
             rpc->bind(func_prefix+"_Push", pushFunc);
             rpc->bind(func_prefix+"_Pop", popFunc);
+            rpc->bind(func_prefix+"_WaitForElement", waitForElementFunc);
             rpc->bind(func_prefix+"_Size", sizeFunc);
         }
         /* Make clients wait untill all servers reach here*/
@@ -142,6 +144,20 @@ public:
             return rpc->call(key_int,func_prefix+"_Pop").template as<std::pair<bool, MappedType>>();
         }
     }
+
+    bool WaitForElement(uint16_t key_int) {
+        if (key_int == my_server) {
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::WaitForElement(local)", key_int);
+            while(queue->size()==0){
+                usleep(1000);
+            }
+            return true;
+        } else {
+            AutoTrace trace = AutoTrace("DistributedMessageQueue::WaitForElement(remote)", key_int);
+            return rpc->call(key_int,func_prefix+"_WaitForElement").template as<bool>();
+        }
+    }
+
     /**
      * Get the size of the queue. Uses key_int to decide the server to hash it to,
      * @param key_int, key_int to know which server

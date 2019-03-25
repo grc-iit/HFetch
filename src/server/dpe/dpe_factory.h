@@ -13,6 +13,7 @@ class DPEFactory{
 public:
     DPEFactory(){}
     std::shared_ptr<DPE> GetEngine(DataPlacementEngineType type){
+        AutoTrace trace = AutoTrace("DPEFactory::GetEngine",type);
         switch (type){
             case DataPlacementEngineType::MAX_BW:{
                 return Singleton<MaxBandwidthDPE>::GetInstance();

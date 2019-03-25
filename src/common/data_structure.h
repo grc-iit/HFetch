@@ -630,12 +630,39 @@ namespace clmdep_msgpack {
     }
 }
 
+
+/**
+ * Custom Iterator
+ */
+
+template <std::size_t I>
+struct wrapper
+{
+    static constexpr std::size_t n = I;
+};
+
+template <class Func, std::size_t ...Is>
+constexpr void static_for_impl( Func &&f, std::index_sequence<Is...> )
+{
+    ( f( wrapper<Is>{} ),... );
+}
+
+template <std::size_t N, class Func>
+constexpr void static_for( Func &&f )
+{
+    static_for_impl( f, std::make_index_sequence<N>{ } );
+}
+
 /**
  * Outstream conversions
  */
 
 std::ostream &operator<<(std::ostream &os, char const *m);
-std::ostream &operator<<(std::ostream &os, std::pair<PosixFile,SegmentScore> const m);
+template <typename T,typename O>
+std::ostream &operator<<(std::ostream &os, std::pair<T,O> const m){
+    return os   << "{TYPE:pair," << "first:" << m.first << ","
+                << "second:" << m.second << "}";
+}
 std::ostream &operator<<(std::ostream &os, uint8_t const &m);
 std::ostream &operator<<(std::ostream &os, LayerInfo const &m);
 std::ostream &operator<<(std::ostream &os, InputArgs const &m);
@@ -645,7 +672,15 @@ std::ostream &operator<<(std::ostream &os, SegmentScore const &m);
 std::ostream &operator<<(std::ostream &os, Event const &m);
 std::ostream &operator<<(std::ostream &os, Layer const &m);
 std::ostream &operator<<(std::ostream &os, PosixFile const &m);
-
+template <typename T>
+std::ostream &operator<<(std::ostream &os, std::vector<T> const &ms){
+    os << "[";
+    for(auto m:ms){
+        os <<m<<",";
+    }
+    os << "]";
+    return os;
+}
 
 
 #endif //HFETCH_DATA_STRUCTURE_H

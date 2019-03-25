@@ -46,8 +46,6 @@ public:
             offsetMaps[i] = std::make_shared<SegmentMap>(std::to_string(i) + "_OFFSET",CONF->is_server,CONF->my_server,CONF->num_servers);
         }
         if(CONF->is_server){
-            std::function<std::vector<std::pair<PosixFile,PosixFile>>(PosixFile)> getDataLocationFunc(std::bind(&FileSegmentAuditor::GetDataLocation, this, std::placeholders::_1));
-            rpc->bind(FILE_SEGMENT_AUDITOR+"_GetDataLocation", getDataLocationFunc);
             MPI_Barrier(MPI_COMM_WORLD);
             if(CONF->my_rank_server == 0){
                 Layer* current=Layer::FIRST;
@@ -69,8 +67,6 @@ public:
     std::map<uint8_t, std::multimap<double,std::pair<PosixFile,PosixFile>,std::greater<double>>> FetchLayerScores();
 
     std::vector<std::pair<PosixFile,PosixFile>> GetDataLocation(PosixFile file);
-
-    std::vector<std::pair<PosixFile,PosixFile>> GetDataLocationServer(PosixFile file,uint16_t server);
 
     bool CheckIfFileActive(PosixFile file);
 

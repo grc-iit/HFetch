@@ -122,7 +122,7 @@ public:
         struct timeval tp;
         gettimeofday(&tp, NULL);
         long int us = tp.tv_sec * 1000000 + tp.tv_usec;
-        return CharStruct(std::to_string(us) + ".h5");
+        return CharStruct(std::to_string(us) + ".hfetch");
     }
 };
 #endif //HFETCH_DATA_MANAGER_H

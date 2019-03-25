@@ -46,7 +46,7 @@ set(HFETCH_COMMON_INT_SRC   src/common/singleton.h
         src/common/debug.cpp)
 #Hfetch Server
 set(HFETCH_SERVER_INT_SRC
-        src/server/server.cpp src/server/server.h
+        src/server/server.h
         src/server/file_segment_auditor.cpp src/server/file_segment_auditor.h
         src/server/event_manager.cpp src/server/event_manager.h
         src/server/hardware_monitor.cpp src/server/hardware_monitor.h

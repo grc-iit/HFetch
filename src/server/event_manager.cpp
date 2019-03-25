@@ -6,6 +6,7 @@
 
 
 ServerStatus EventManager::handle(std::vector<Event> events) {
+    AutoTrace trace = AutoTrace("EventManager::handle",events);
     auditor->Update(events);
     auto placements = dpe->place(events);
     for(auto placement : placements){
