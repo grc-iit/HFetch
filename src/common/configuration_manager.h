@@ -16,7 +16,7 @@ public:
     int num_servers,my_rank_world,comm_size,my_rank_server;
     MPI_Comm server_comm;
     bool is_server;
-    int ranks_per_server,num_workers;
+    int ranks_per_server,num_workers,comm_threads_per_server;
     uint16_t my_server;
     DataPlacementEngineType dpeType;
     double hit,total;
@@ -24,7 +24,7 @@ public:
 
 
     ConfigurationManager():
-    num_servers(1),is_server(false),ranks_per_server(1),my_server(0),my_rank_server(0),num_workers(1),
+    num_servers(1),is_server(false),ranks_per_server(1),comm_threads_per_server(1),my_server(0),my_rank_server(0),num_workers(1),
     dpeType(DataPlacementEngineType::MAX_BW),server_comm(),hit(0.0),total(0.0),max_num_files(1){
         AutoTrace trace = AutoTrace("ConfigurationManager");
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);

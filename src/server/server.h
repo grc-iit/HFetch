@@ -70,6 +70,7 @@ public:
         InputArgs args = parse_opts(argc,argv);
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
+        CONF->comm_threads_per_server=args.comm_threads_per_server;
         CONF->max_num_files=args.max_files;
         CONF->ranks_per_server=args.ranks_per_server_;
         CONF->num_workers=args.num_workers;
@@ -88,6 +89,7 @@ public:
         CONF->BuildLayers(args.layers,args.layer_count_);
         CONF->max_num_files=args.max_files;
         CONF->ranks_per_server=args.ranks_per_server_;
+        CONF->comm_threads_per_server=args.comm_threads_per_server;
         CONF->num_workers=args.num_workers;
         CONF->is_server=false;
         CONF->num_servers=args.num_servers;
@@ -104,7 +106,7 @@ public:
         AutoTrace trace = AutoTrace("Server",num_workers_);
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->comm_size);
         if(CONF->is_server){
-            rpc->run(8);
+            rpc->run(CONF->comm_threads_per_server);
             eventManager = Singleton<EventManager>::GetInstance();
             hardwareMonitor = Singleton<HardwareMonitor>::GetInstance();
         }

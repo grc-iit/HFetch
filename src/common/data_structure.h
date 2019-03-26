@@ -39,6 +39,7 @@ typedef struct InputArgs{
     size_t num_workers;
     int max_files;
     int num_servers;
+    int comm_threads_per_server;
 
 } InputArgs;
 

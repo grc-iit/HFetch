@@ -71,11 +71,12 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
     args.direct_io_=true;
     args.num_servers=1;
     args.max_files=100;
+    args.comm_threads_per_server=1;
     int comm_size;
     MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
     args.num_workers=1;
     args.ranks_per_server_=1;
-    while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:m:s:")) != -1)
+    while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:m:s:c:")) != -1)
     {
         switch (opt)
         {
@@ -106,6 +107,10 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
             }
             case 'm':{
                 args.max_files= atoi(optarg);
+                break;
+            }
+            case 'c':{
+                args.comm_threads_per_server= atoi(optarg);
                 break;
             }
             case 'r':{
