@@ -41,6 +41,9 @@ typedef struct InputArgs{
     int max_files;
     int num_servers;
     int comm_threads_per_server;
+    bool is_logging;
+    char log_path[256];
+
 
 } InputArgs;
 

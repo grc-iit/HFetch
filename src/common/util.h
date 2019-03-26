@@ -76,7 +76,8 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
     MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
     args.num_workers=1;
     args.ranks_per_server_=1;
-    while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:m:s:c:")) != -1)
+    args.is_logging=false;
+    while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:m:s:c:a:p:")) != -1)
     {
         switch (opt)
         {
@@ -95,6 +96,14 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
                 }
                 args.layer_count_=layer_count;
                 args.layers=layerInfos;
+                break;
+            }
+            case 'a':{
+                args.is_logging= (bool) atoi(optarg);
+                break;
+            }
+            case 'p':{
+                strcpy(args.log_path,optarg);
                 break;
             }
             case 'i':{

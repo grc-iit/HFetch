@@ -34,10 +34,17 @@ int main(int argc, char*argv[]){
     signal(SIGABRT, handler);
     signal(SIGSEGV, handler);
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
+
     //setup_env(args);
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    if(args.is_logging){
+        char complete_log[256];
+        sprintf(complete_log, "%s/run_%d.log", args.log_path,my_rank);
+        freopen("test.txt","w",stdout);
+        freopen("test.txt","a",stderr);
+    }
     size_t my_rank_size = args.io_size_/comm_size;
     void* buf = malloc(my_rank_size);
     char *homepath = getenv("RUN_DIR");
@@ -60,7 +67,7 @@ int main(int argc, char*argv[]){
     int iterations = 16;
     size_t small_io_size = my_rank_size/iterations;
     for(int i=0;i<iterations;i++){
-        hfetch::fread(buf,small_io_size,1q,fh);
+        hfetch::fread(buf,small_io_size,1,fh);
         usleep(100000);
     }
     hfetch::fclose(fh);
