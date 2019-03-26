@@ -28,7 +28,7 @@ int main(int argc, char*argv[]){
         printf("Press any key to exit server\n");
     }
     getchar();
-    Singleton<Server>::GetInstance()->stop();
+    //Singleton<Server>::GetInstance()->stop();
     }
     catch(std::exception const &e)
     {
