@@ -22,7 +22,7 @@ static void setup_env(struct InputArgs args){
 
     }else{
         int i;
-        for(i=0;i<args.layer_count_-1;++i){
+        for(i=0;i<args.layer_count_;++i){
             if(!args.layers[i].is_memory){
                 char cmd1[256];
                 sprintf(cmd1,"rm %s/*",args.layers[i].mount_point_);
