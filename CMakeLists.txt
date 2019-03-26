@@ -10,7 +10,7 @@ set(INSTALL_DIR $ENV{INSTALL_DIR})
 message(INFO " INSTALL_DIR ${INSTALL_DIR}")
 
 set(LIB_FLAGS -L${CMAKE_BINARY_DIR}/external/rpclib/ -lrpc  -L${INSTALL_DIR}/lib/ -lmpi -lpthread -lrt -ldl -lboost_filesystem )
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INSTALL_DIR}/include/  -L${CMAKE_BINARY_DIR}/ -w ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INSTALL_DIR}/include/  -L${CMAKE_BINARY_DIR}/ -w -g")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_DEBUG")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_TIMER")
