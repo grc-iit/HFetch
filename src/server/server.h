@@ -31,27 +31,28 @@ class Server {
     DistributedMessageQueue<Event> app_event_queue;
 
     ServerStatus runClientServerInternal(std::future<void> futureObj){
-        try{
             std::string name="client_thread";
             pthread_setname_np(pthread_self(), name.c_str());
             std::vector<Event> events=std::vector<Event>();
             while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
-                AutoTrace trace = AutoTrace("Server::runClientServerInternal");
-                app_event_queue.WaitForElement(CONF->my_server);
-                auto result = app_event_queue.Pop(CONF->my_server);
-                if(result.first){
-                    events.push_back(result.second);
-                }
-                if(events.size() > 0 && (events.size() >= MAX_PREFETCH_EVENTS)){
-                    eventManager->handle(events);
-                    events.clear();
+                try{
+                    AutoTrace trace = AutoTrace("Server::runClientServerInternal");
+                    app_event_queue.WaitForElement(CONF->my_server);
+                    auto result = app_event_queue.Pop(CONF->my_server);
+                    if(result.first){
+                        events.push_back(result.second);
+                    }
+                    if(events.size() > 0 && (events.size() >= MAX_PREFETCH_EVENTS)){
+                        eventManager->handle(events);
+                        events.clear();
+                    }
+                }catch(const std::exception& e){
+                    std::cerr << e.what() << '\n';
+                    std::cerr << boost::stacktrace::stacktrace();
+                    throw runtime_error("Exception in void client_thread(): " + std::string(e.what()));
                 }
             }
-        }catch(const std::exception& e){
-            std::cerr << e.what() << '\n';
-            std::cerr << boost::stacktrace::stacktrace();
-            throw runtime_error("Exception in void client_thread(): " + std::string(e.what()));
-        }
+
 
         return ServerStatus::SERVER_SUCCESS;
     }
