@@ -49,7 +49,6 @@ class Server {
                 }catch(const std::exception& e){
                     std::cerr << e.what() << '\n';
                     std::cerr << boost::stacktrace::stacktrace();
-                    throw runtime_error("Exception in void client_thread(): " + std::string(e.what()));
                 }
             }
 
