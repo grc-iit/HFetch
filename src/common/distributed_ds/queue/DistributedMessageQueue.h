@@ -152,6 +152,7 @@ public:
             while(queue->size()==0){
                 usleep(1000);
                 if(count%10000==0) printf("Server %d, No Events in Queue\n",key_int);
+                count++;
             }
             return true;
         } else {
