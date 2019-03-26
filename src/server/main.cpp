@@ -9,7 +9,6 @@
 int main(int argc, char*argv[]){
     signal(SIGABRT, handler);
     signal(SIGSEGV, handler);
-    try {
     std::string name="hfetch_server";
     pthread_setname_np(pthread_self(), name.c_str());
     MPI_Init(&argc,&argv);
@@ -28,13 +27,7 @@ int main(int argc, char*argv[]){
         printf("Press any key to exit server\n");
     }
     getchar();
-    //Singleton<Server>::GetInstance()->stop();
-    }
-    catch(std::exception const &e)
-    {
-        std::cerr << e.what() << '\n';
-        std::cerr << boost::stacktrace::stacktrace() << '\n';
-    }
+    Singleton<Server>::GetInstance()->stop();
     MPI_Finalize();
     return 0;
 }

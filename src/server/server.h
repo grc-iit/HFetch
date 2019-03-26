@@ -35,7 +35,7 @@ class Server {
         std::vector<Event> events=std::vector<Event>();
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
             AutoTrace trace = AutoTrace("Server::runClientServerInternal");
-            app_event_queue.WaitForElement(CONF->my_server);
+            //app_event_queue.WaitForElement(CONF->my_server);
             auto result = app_event_queue.Pop(CONF->my_server);
             if(result.first){
                 events.push_back(result.second);
