@@ -38,6 +38,7 @@ private:
     boost::interprocess::managed_shared_memory segment;
 public:
     ~RPC(){
+        if(is_server) bip::shared_memory_object::remove(name.c_str());
     }
     RPC(std::string name_,bool is_server_, uint16_t my_server_, int num_servers_):
     isInitialized(false),my_server(my_server_),is_server(is_server_),server_list(),server_port(RPC_PORT),

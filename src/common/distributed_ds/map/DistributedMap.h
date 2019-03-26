@@ -62,7 +62,7 @@ public:
 
     /* Constructor to deallocate the shared memory*/
     ~DistributedMap(){
-        boost::interprocess::shared_memory_object::remove(name.c_str());
+        if(is_server) boost::interprocess::shared_memory_object::remove(name.c_str());
     }
 
     explicit DistributedMap(){}

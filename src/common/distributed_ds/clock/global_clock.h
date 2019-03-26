@@ -32,7 +32,7 @@ private:
 public:
     ~GlobalClock(){
         AutoTrace trace = AutoTrace("~GlobalClock");
-        bip::shared_memory_object::remove(name.c_str());
+        if(is_server) bip::shared_memory_object::remove(name.c_str());
     }
     GlobalClock(std::string name_,
                      bool is_server_,
