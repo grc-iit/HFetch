@@ -60,7 +60,7 @@ int main(int argc, char*argv[]){
     int iterations = 16;
     size_t small_io_size = my_rank_size/iterations;
     for(int i=0;i<iterations;i++){
-        hfetch::fread(buf,small_io_size,1,fh);
+        hfetch::fread(buf,small_io_size,1q,fh);
         usleep(100000);
     }
     hfetch::fclose(fh);
