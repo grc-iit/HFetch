@@ -43,8 +43,9 @@ typedef enum DataPlacementEngineType{
 
 /* IOClient defines various types of IO Clients supported by HFetch */
 typedef enum IOClientType{
-    POSIX_FILE=0,
-    SIMPLE_MEMORY=1
+    LOCAL_POSIX_FILE=0,
+    SIMPLE_MEMORY=1,
+    SHARED_POSIX_FILE=2
 } IOClientType;
 
 /**

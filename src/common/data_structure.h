@@ -23,6 +23,7 @@ typedef struct LayerInfo {
     float capacity_mb_;
     float bandwidth;
     bool is_memory;
+    bool is_local;
     bool direct_io;
 } LayerInfo;
 

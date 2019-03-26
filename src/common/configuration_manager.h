@@ -47,7 +47,7 @@ public:
             }
             current_layer->id_=order+1;
             current_layer->capacity_mb_=layers[order].capacity_mb_;
-            current_layer->io_client_type=layers[order].is_memory?IOClientType::SIMPLE_MEMORY:IOClientType::POSIX_FILE;
+            current_layer->io_client_type=layers[order].is_memory?IOClientType::SIMPLE_MEMORY:layers[order].is_local?IOClientType::LOCAL_POSIX_FILE:IOClientType::SHARED_POSIX_FILE;
             current_layer->direct_io=layers[order].direct_io;
             current_layer->bandwidth_mbps_=layers[order].bandwidth;
             strcpy(current_layer->layer_loc.data(),layers[order].mount_point_);

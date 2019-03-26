@@ -7,21 +7,25 @@
 
 #include <src/common/singleton.h>
 #include "io_client.h"
-#include "file_client.h"
+#include "shared_file_client.h"
+#include "local_file_client.h"
 #include "memory_client.h"
 
 class IOClientFactory{
 public:
     IOClientFactory(){
         AutoTrace trace = AutoTrace("IOClientFactory");
-        Singleton<FileClient>::GetInstance();
+        Singleton<SharedFileClient>::GetInstance();
         Singleton<MemoryClient>::GetInstance();
     }
     std::shared_ptr<IOClient> GetClient(IOClientType type){
         AutoTrace trace = AutoTrace("GetClient",type);
         switch(type){
-            case IOClientType::POSIX_FILE:{
-                return Singleton<FileClient>::GetInstance();
+            case IOClientType::SHARED_POSIX_FILE:{
+                return Singleton<SharedFileClient>::GetInstance();
+            }
+            case IOClientType::LOCAL_POSIX_FILE:{
+                return Singleton<LocalFileClient>::GetInstance();
             }
             case IOClientType::SIMPLE_MEMORY:{
                 return Singleton<MemoryClient>::GetInstance();

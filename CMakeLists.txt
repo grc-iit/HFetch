@@ -36,14 +36,14 @@ set(HFETCH_COMMON_INT_SRC   src/common/singleton.h
                         src/common/macros.h src/common/typedefs.h
                         src/common/enumerations.h src/common/data_structures.cpp
                         src/common/io_clients/io_client_factory.h
-                        src/common/io_clients/file_client.cpp
-                        src/common/io_clients/file_client.h
+        src/common/io_clients/shared_file_client.cpp
+        src/common/io_clients/shared_file_client.h
                         src/common/io_clients/memory_client.cpp
                         src/common/io_clients/memory_client.h
                         src/common/io_clients/io_client.h
                         src/common/io_clients/data_manager.h
                         src/common/util.h
-        src/common/debug.cpp)
+        src/common/debug.cpp src/common/io_clients/local_file_client.cpp src/common/io_clients/local_file_client.h)
 #Hfetch Server
 set(HFETCH_SERVER_INT_SRC
         src/server/server.h

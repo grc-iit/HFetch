@@ -141,11 +141,11 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
     if(args.layer_count_ == 0){
         char *pfs = getenv("RUN_DIR");
         char *nvme,*bb;
-        if(strcmp("",getenv("NVME_RUN_DIR"))==0)
+        if(getenv("NVME_RUN_DIR")==NULL)
             nvme = getenv("RUN_DIR");
         else
             nvme = getenv("NVME_RUN_DIR");
-        if(strcmp("",getenv("BB_RUN_DIR"))==0)
+        if(getenv("BB_RUN_DIR")==NULL)
             bb = getenv("RUN_DIR");
         else
             bb = getenv("BB_RUN_DIR");
@@ -155,18 +155,22 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
         layers[0].capacity_mb_ = 4*args.io_size_/MB/16;
         layers[0].bandwidth = 80000;
         layers[0].is_memory = true;
+        layers[0].is_local = true;
         sprintf(layers[1].mount_point_, "%s/nvme/", nvme);
         layers[1].capacity_mb_ = 4*args.io_size_/MB/16;
         layers[1].bandwidth = 2000;
         layers[1].is_memory = false;
+        layers[1].is_local = true;
         sprintf(layers[2].mount_point_, "%s/bb/", bb);
         layers[2].capacity_mb_ = 8*args.io_size_/MB/16;
         layers[2].bandwidth = 400;
         layers[2].is_memory = false;
+        layers[2].is_local = true;
         sprintf(layers[3].mount_point_, "%s/pfs/", pfs);
         layers[3].capacity_mb_ = args.io_size_/MB;
         layers[3].bandwidth = 100;
         layers[3].is_memory = false;
+        layers[3].is_local = true;
         args.layers=layers;
         args.layer_count_=4;
         sprintf(args.pfs_path, "%s", layers[3].mount_point_);

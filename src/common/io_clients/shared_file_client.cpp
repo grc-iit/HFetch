@@ -2,9 +2,9 @@
 // Created by hariharan on 3/19/19.
 //
 
-#include "file_client.h"
+#include "shared_file_client.h"
 
-ServerStatus FileClient::Read(PosixFile &source, PosixFile &destination) {
+ServerStatus SharedFileClient::Read(PosixFile &source, PosixFile &destination) {
     AutoTrace trace = AutoTrace("FileClient::Read",source,destination);
     std::string file_path=std::string(source.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(source.filename.c_str());
     FILE* fh = fopen(file_path.c_str(),"r");
@@ -17,7 +17,7 @@ ServerStatus FileClient::Read(PosixFile &source, PosixFile &destination) {
     return SERVER_SUCCESS;
 }
 
-ServerStatus FileClient::Write(PosixFile &source, PosixFile &destination) {
+ServerStatus SharedFileClient::Write(PosixFile &source, PosixFile &destination) {
     AutoTrace trace = AutoTrace("FileClient::Write",source,destination);
     std::string file_path=std::string(destination.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(destination.filename.c_str());
     FILE* fh = fopen(file_path.c_str(),"r+");
@@ -31,7 +31,7 @@ ServerStatus FileClient::Write(PosixFile &source, PosixFile &destination) {
     return SERVER_SUCCESS;
 }
 
-ServerStatus FileClient::Delete(PosixFile file) {
+ServerStatus SharedFileClient::Delete(PosixFile file) {
     AutoTrace trace = AutoTrace("FileClient::Delete",file);
     hasChanged.Put(file.layer.id_,true);
     std::string file_path=std::string(file.layer.layer_loc.c_str())+FILE_SEPARATOR+std::string(file.filename.c_str());
@@ -53,7 +53,7 @@ ServerStatus FileClient::Delete(PosixFile file) {
     return SERVER_SUCCESS;
 }
 
-double FileClient::GetCurrentUsage(Layer layer) {
+double SharedFileClient::GetCurrentUsage(Layer layer) {
     AutoTrace trace = AutoTrace("FileClient::GetCurrentUsage",layer);
     auto capacity_iter=layerCapacity.Get(layer.id_);
     if(capacity_iter.first){

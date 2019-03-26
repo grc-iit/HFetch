@@ -81,7 +81,10 @@ public:
         AutoTrace trace = AutoTrace("HardwareMonitor");
         Layer* current=Layer::FIRST;
         while(current != nullptr){
-            if(current->io_client_type == IOClientType::POSIX_FILE){
+            if(current->io_client_type == IOClientType::LOCAL_POSIX_FILE){
+                num_monitors++;
+            }
+            if(current->io_client_type == IOClientType::SHARED_POSIX_FILE && CONF->my_rank_server ==0){
                 num_monitors++;
             }
             current=current->next;
@@ -94,7 +97,12 @@ public:
         Layer* current=Layer::FIRST;
         int i = 0;
         while(current != nullptr){
-            if(current->io_client_type == IOClientType::POSIX_FILE){
+            if(current->io_client_type == IOClientType::LOCAL_POSIX_FILE){
+                std::future<void> futureObj = monitor__exit_signal[i].get_future();
+                monitor_threads[i]=std::thread (&HardwareMonitor::AsyncMonitorInternal, this, std::move(futureObj),current);
+                ++i;
+            }
+            if(current->io_client_type == IOClientType::SHARED_POSIX_FILE && CONF->my_rank_server == 0){
                 std::future<void> futureObj = monitor__exit_signal[i].get_future();
                 monitor_threads[i]=std::thread (&HardwareMonitor::AsyncMonitorInternal, this, std::move(futureObj),current);
                 ++i;
