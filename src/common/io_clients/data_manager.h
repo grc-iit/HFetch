@@ -21,7 +21,7 @@ public:
     }
     ServerStatus Move(PosixFile source, PosixFile destination, bool deleteSource = true) {
         AutoTrace trace = AutoTrace("DataManager::Move",source,destination,deleteSource);
-        std::cerr<<source.GetSize()<<"\n";
+        if(source.GetSize()<0) std::cerr<<source.GetSize()<<"\n";
         destination.data.reserve(source.GetSize());
         ServerStatus status;
         status = ioFactory->GetClient(source.layer.io_client_type)->Read(source,destination);
