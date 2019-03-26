@@ -150,8 +150,8 @@ public:
             AutoTrace trace = AutoTrace("DistributedMessageQueue::WaitForElement(local)", key_int);
             int count=0;
             while(queue->size()==0){
-                usleep(1000);
-                if(count==10000) printf("Server %d, No Events in Queue\n",key_int);
+                usleep(10);
+                if(count==1000000) printf("Server %d, No Events in Queue\n",key_int);
                 count++;
             }
             return true;
