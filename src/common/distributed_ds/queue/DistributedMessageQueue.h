@@ -148,8 +148,10 @@ public:
     bool WaitForElement(uint16_t key_int) {
         if (key_int == my_server) {
             AutoTrace trace = AutoTrace("DistributedMessageQueue::WaitForElement(local)", key_int);
+            int count=0;
             while(queue->size()==0){
                 usleep(1000);
+                if(count%10000==0) printf("Server %d, No Events in Queue\n",key_int);
             }
             return true;
         } else {
