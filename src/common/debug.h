@@ -125,7 +125,7 @@ public:
     AutoTrace(std::string string,Args... args):m_line(string)
     {
         char thread_name[256];
-        pthread_setname_np(pthread_self(), thread_name);
+        pthread_getname_np(pthread_self(), thread_name,256);
         std::stringstream stream;
         stream << "\033[31m";
         if(rank == -1) MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -162,10 +162,10 @@ public:
     {
         std::stringstream stream;
         char thread_name[256];
-        pthread_setname_np(pthread_self(), thread_name);
+        pthread_getname_np(pthread_self(), thread_name,256);
         stream << "\033[31m";
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        stream <<item-- <<";"<<thread_name<<";"<< rank << ";" << m_line << ";";
+        stream <<item-- <<";"<<std::string(thread_name)<<";"<< rank << ";" << m_line << ";";
 #endif
 #if defined(HERMES_TRACE)
         stream  <<";";
