@@ -24,12 +24,14 @@ static void setup_env(struct InputArgs args){
         int i;
         for(i=0;i<args.layer_count_;++i){
             if(!args.layers[i].is_memory){
-                char cmd1[256];
-                sprintf(cmd1,"rm %s/*",args.layers[i].mount_point_);
-                run_command(cmd1);
-                char cmd2[256];
-                sprintf(cmd2,"mkdir -p %s/",args.layers[i].mount_point_);
-                run_command(cmd2);
+                if(args.layers[i].is_local || CONF->my_rank_server==0){
+                    char cmd1[256];
+                    sprintf(cmd1,"rm %s/*",args.layers[i].mount_point_);
+                    run_command(cmd1);
+                    char cmd2[256];
+                    sprintf(cmd2,"mkdir -p %s/",args.layers[i].mount_point_);
+                    run_command(cmd2);
+                }
             }
         }
     }
