@@ -12,8 +12,9 @@ class DataManager{
 private:
     std::shared_ptr<IOClientFactory> ioFactory;
     std::shared_ptr<FileSegmentAuditor> fileSegmentAuditor;
+    GlobalSequence file_id_seq;
 public:
-    DataManager(){
+    DataManager():file_id_seq("FILE_NUM_SEQ",CONF->is_server,CONF->my_server,CONF->num_servers){
         AutoTrace trace = AutoTrace("DataManager");
         ioFactory = Singleton<IOClientFactory>::GetInstance();
         fileSegmentAuditor = Singleton<FileSegmentAuditor>::GetInstance();
@@ -120,11 +121,7 @@ public:
     }
     CharStruct GenerateBufferFilename() {
         AutoTrace trace = AutoTrace("DataManager::GenerateBufferFilename");
-        /* use timestamp to generate unique file names. */
-        struct timeval tp;
-        gettimeofday(&tp, NULL);
-        long int us = tp.tv_sec * 1000000 + tp.tv_usec;
-        return CharStruct(std::to_string(us) + ".hfetch");
+        return CharStruct(std::to_string(file_id_seq.GetNextSequenceServer(0)) + ".hfetch");
     }
 };
 #endif //HFETCH_DATA_MANAGER_H
