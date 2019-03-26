@@ -42,7 +42,7 @@ int main(int argc, char*argv[]){
     if(args.is_logging){
         char complete_log[256];
         sprintf(complete_log, "%s/run_%d.log", args.log_path,my_rank);
-        freopen("test.txt","w",stdout);
+        freopen("test.txt","w+",stdout);
         freopen("test.txt","a",stderr);
     }
     size_t my_rank_size = args.io_size_/comm_size;
