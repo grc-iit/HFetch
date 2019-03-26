@@ -23,6 +23,16 @@ private:
     std::shared_ptr<RPC> rpc;
     const std::string MEMORY_CLIENT="MEMORY_CLIENT";
 public:
+    ~MemoryClient(){
+        AutoTrace trace = AutoTrace("~MemoryClient");
+        if(CONF->is_server){
+            auto datas = data_map.GetAllData();
+            for(auto data:datas){
+                bip::shared_memory_object::remove(data.second.filename.c_str());
+            }
+        }
+    }
+
     MemoryClient():data_map("DATA_MAP",CONF->is_server,CONF->my_server,CONF->num_servers){
         AutoTrace trace = AutoTrace("MemoryClient");
         rpc=Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->num_servers);

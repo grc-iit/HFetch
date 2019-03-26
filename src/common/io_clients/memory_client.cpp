@@ -63,6 +63,7 @@ ServerStatus MemoryClient::Write(PosixFile &source, PosixFile &destination) {
                 free(data);
             }
         }else{
+            bip::shared_memory_object::remove(destination.filename.c_str());
             auto shm = new bip::managed_shared_memory(bip::create_only,destination.filename.c_str() , source.GetSize()+1024);
             CharAllocator charallocator(shm->get_segment_manager());
             MyShmString *myShmString = shm->construct<MyShmString>("myShmString")(charallocator);
