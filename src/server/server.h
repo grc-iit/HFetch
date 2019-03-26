@@ -71,6 +71,7 @@ public:
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
         CONF->max_num_files=args.max_files;
+        CONF->ranks_per_server=args.ranks_per_server_;
         CONF->num_workers=args.num_workers;
         CONF->is_server=true;
         CONF->num_servers=CONF->comm_size;
@@ -86,10 +87,11 @@ public:
         CONF;
         CONF->BuildLayers(args.layers,args.layer_count_);
         CONF->max_num_files=args.max_files;
+        CONF->ranks_per_server=args.ranks_per_server_;
         CONF->num_workers=args.num_workers;
         CONF->is_server=false;
         CONF->num_servers=args.num_servers;
-        CONF->my_server=CONF->my_rank_world/args.num_servers;
+        CONF->my_server=CONF->my_rank_world/args.ranks_per_server_;
         CONF->UpdateServerComm();
         Singleton<Server>::GetInstance();
         Singleton<IOClientFactory>::GetInstance();

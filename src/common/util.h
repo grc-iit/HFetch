@@ -74,7 +74,7 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
     int comm_size;
     MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
     args.num_workers=1;
-    while ((opt = getopt (argc, argv, "l:i:f:n:d:w:m:s:")) != -1)
+    while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:m:s:")) != -1)
     {
         switch (opt)
         {
@@ -105,6 +105,10 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
             }
             case 'm':{
                 args.max_files= atoi(optarg);
+                break;
+            }
+            case 'r':{
+                args.ranks_per_server_= (size_t) atoi(optarg);
                 break;
             }
             case 'n':{
