@@ -113,11 +113,11 @@ ServerStatus FileSegmentAuditor::IncreaseFileSegmentFrequency(Event event) {
             elements.second.second.frequency+=1;
             elements.second.second.lrf+=pow(.5,LAMDA_FOR_SCORE*event.time/1000000.0);
             double newScore = elements.second.second.GetScore();
-            printf("File:%s,%ld,%ld Score:%f\n",
+            /*printf("File:%s,%ld,%ld Score:%f\n",
                     event.filename.c_str(),
                     elements.second.first.segment.start,
                     elements.second.first.segment.end,
-                    newScore);
+                    newScore);*/
             multiMapScore->Put(common,elements.second);
             auto layer_score_iter = layer_score_map.Get(elements.second.first.layer.id_);
             if(layer_score_iter.first){
