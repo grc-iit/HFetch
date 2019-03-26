@@ -48,7 +48,7 @@ int main(int argc, char*argv[]){
     size_t my_rank_size = args.io_size_/comm_size;
     void* buf = malloc(my_rank_size);
     char *homepath = getenv("RUN_DIR");
-    printf("rank:%d, my_server:%d\n",my_rank,CONF->my_server);
+    //printf("rank:%d, my_server:%d\n",my_rank,CONF->my_server);
     char filename[256];
     sprintf(filename, "%s/pfs/test_%d.bat", homepath,my_rank);
     if(!exists(filename)){
