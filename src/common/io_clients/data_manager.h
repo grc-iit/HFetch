@@ -55,11 +55,11 @@ public:
         /* Check what data to be moved so that space can be made */
         double remaining_capacity = layer.capacity_mb_*MB-ioFactory->GetClient(layer.io_client_type)->GetCurrentUsage(layer);
         remaining_capacity = remaining_capacity<0?0:remaining_capacity;
-        long space_avail = remaining_capacity;
+        long required_space = remaining_capacity;
         double this_layer_score=0;
         auto iter = layerScoreMap.end();
-        while(iter!=layerScoreMap.begin() && iter->first < score && space_avail <amount){
-            space_avail += iter->second.second.GetSize();
+        while(iter!=layerScoreMap.begin() && iter->first < score && required_space <amount){
+            required_space += iter->second.second.GetSize();
             this_layer_score = iter->first;
             iter--;
         }
@@ -72,9 +72,9 @@ public:
         /* At this point we have ensured we have space in next layer
          * Move this layer data to next layer and update MDM */
         while(iter!=layerScoreMap.end()){
-            if(iter->second.second.GetSize() < space_avail){
-                auto orig_pieces = Split(iter->second.first,space_avail);
-                auto buf_pieces = Split(iter->second.second,space_avail);
+            if(iter->second.second.GetSize() > required_space){
+                auto orig_pieces = Split(iter->second.first,required_space);
+                auto buf_pieces = Split(iter->second.second,required_space);
                 PosixFile source = buf_pieces[1];
                 PosixFile destination = source;
                 destination.layer = *layer.next;
@@ -86,6 +86,7 @@ public:
                 }
                 Move(source,destination,source.layer != *Layer::LAST);
                 fileSegmentAuditor->UpdateOnMove(orig_pieces[1],destination);
+                required_space-=buf_pieces[1].GetSize();
             }else{
                 PosixFile source = iter->second.second;
                 PosixFile destination = iter->second.second;
@@ -95,6 +96,7 @@ public:
                 }
                 Move(source,destination,source.layer != *Layer::LAST);
                 fileSegmentAuditor->UpdateOnMove(iter->second.first,destination);
+                required_space-=source.GetSize();
             }
             iter++;
         }
