@@ -10,6 +10,8 @@
 #include <getopt.h>
 #include <cstdint>
 #include <src/common/data_structure.h>
+#include <src/common/macro.h>
+#include <src/common/configuration_manager.h>
 
 int run_command(char* cmd){
     int ret;
