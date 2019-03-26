@@ -16,6 +16,7 @@ public:
     IOClientFactory(){
         AutoTrace trace = AutoTrace("IOClientFactory");
         Singleton<SharedFileClient>::GetInstance();
+        Singleton<LocalFileClient>::GetInstance();
         Singleton<MemoryClient>::GetInstance();
     }
     std::shared_ptr<IOClient> GetClient(IOClientType type){
