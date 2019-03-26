@@ -46,7 +46,7 @@ int main(int argc, char*argv[]){
     sprintf(filename, "%s/pfs/test_%d.bat", homepath,my_rank);
     if(!exists(filename)){
         char command[256];
-        sprintf(command,"dd if=/dev/urandom of=%s bs=%dM count=1",filename,my_rank_size/MB);
+        sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d",filename,MB,my_rank_size/MB);
         run_command(command);
     }
     MPI_Barrier(MPI_COMM_WORLD);
