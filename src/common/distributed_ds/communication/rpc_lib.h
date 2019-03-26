@@ -141,7 +141,7 @@ public:
     RPCLIB_MSGPACK::object_handle call(uint16_t server_index,std::string const &func_name,
                                                Args... args) {
 
-        //AutoTrace trace = AutoTrace("RPC::call",server_index,func_name);
+        AutoTrace trace = AutoTrace("RPC::call",server_index,func_name);
         int16_t port = server_port + server_index;
         /* Connect to Server */
         rpc::client client(server_list->at(server_index).c_str(), port);
@@ -151,7 +151,7 @@ public:
     template <typename... Args>
     std::future<RPCLIB_MSGPACK::object_handle> async_call(uint16_t server_index,std::string const &func_name,
                                        Args... args) {
-        //AutoTrace trace = AutoTrace("RPC::async_call",server_index,func_name);
+        AutoTrace trace = AutoTrace("RPC::async_call",server_index,func_name);
         int16_t port = server_port + server_index;
         /* Connect to Server */
         rpc::client client(server_list->at(server_index).c_str(), port);
