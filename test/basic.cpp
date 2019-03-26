@@ -25,6 +25,8 @@ char* GenerateData(long size){
 
 
 int main(int argc, char*argv[]){
+    signal(SIGABRT, handler);
+    signal(SIGSEGV, handler);
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
     //setup_env(args);
     int my_rank,comm_size;
