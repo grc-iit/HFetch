@@ -123,9 +123,9 @@ public:
             for(int i=0;i<numWorker;++i) {
                 std::future<void> futureObj = client_server_exit_signal[i].get_future();
                 client_server_workers[i]=std::thread (&Server::runClientServerInternal, this, std::move(futureObj));
-                std::future<void> futureObj2 = monitor_server_exit_signal[i].get_future();
+            /*    std::future<void> futureObj2 = monitor_server_exit_signal[i].get_future();
                 monitor_server_workers[i]=std::thread (&Server::runMonitorServerInternal, this, std::move(futureObj2));
-            }
+            */}
         }
     }
 
@@ -144,10 +144,10 @@ public:
         AutoTrace trace = AutoTrace("Server::stop");
         for (int i = 0; i < num_workers; ++i) {
             /* Issue server kill signals */
-            monitor_server_exit_signal[i].set_value();
+            /*monitor_server_exit_signal[i].set_value();*/
             client_server_exit_signal[i].set_value();
             /* wait for servers to end */
-            if(monitor_server_workers[i].joinable()) monitor_server_workers[i].join();
+            /*if(monitor_server_workers[i].joinable()) monitor_server_workers[i].join();*/
             if(client_server_workers[i].joinable()) client_server_workers[i].join();
         }
     }
