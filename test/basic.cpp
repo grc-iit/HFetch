@@ -7,6 +7,7 @@
 #include <src/common/macros.h>
 #include <src/common/configuration_manager.h>
 #include <src/common/singleton.h>
+#include <sys/stat.h>
 #include "util.h"
 
 char* GenerateData(long size){
@@ -24,6 +25,11 @@ char* GenerateData(long size){
 }
 
 
+inline bool exists(char* name) {
+    struct stat buffer;
+    return (stat(name, &buffer) == 0);
+}
+
 int main(int argc, char*argv[]){
     signal(SIGABRT, handler);
     signal(SIGSEGV, handler);
@@ -35,21 +41,19 @@ int main(int argc, char*argv[]){
     size_t my_rank_size = args.io_size_/comm_size;
     void* buf = malloc(my_rank_size);
     char *homepath = getenv("RUN_DIR");
-    char filename[256];
-    char* write_buf = GenerateData(my_rank_size);
     printf("rank:%d, my_server:%d\n",my_rank,CONF->my_server);
+    char filename[256];
+    sprintf(filename, "%s/pfs/test_%d.bat", homepath,my_rank);
+    if(!exists(filename)){
+        char command[256];
+        sprintf(command,"dd if=/dev/urandom of=%s bs=%dM count=32",filename,my_rank_size/MB);
+        run_command(command);
+    }
     if (my_rank == 0) {
         printf("Press any key to start program\n");
         getchar();
     }
     MPI_Barrier(MPI_COMM_WORLD);
-
-    sprintf(filename, "%s/pfs/test_%d.bat", homepath,my_rank);
-    /* prepare data to be read */
-    FILE* pfh = std::fopen(filename,"w+");
-    std::fwrite(write_buf,my_rank_size,1,pfh);
-    std::fclose(pfh);
-
     /* Actual APP */
     FILE* fh = hfetch::fopen(filename,"r");
     int iterations = 16;
