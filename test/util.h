@@ -12,6 +12,7 @@
 #include <src/common/data_structure.h>
 #include <src/common/macros.h>
 #include <src/common/configuration_manager.h>
+#include <src/common/singleton.h>
 
 int run_command(char* cmd){
     int ret;
