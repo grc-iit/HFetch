@@ -64,7 +64,7 @@ int main(int argc, char*argv[]){
     MPI_Barrier(MPI_COMM_WORLD);
     /* Actual APP */
     FILE* fh = hfetch::fopen(filename,"r");
-    int iterations = 16;
+    int iterations = 2;
     size_t small_io_size = my_rank_size/iterations;
     for(int i=0;i<iterations;i++){
         hfetch::fread(buf,small_io_size,1,fh);
