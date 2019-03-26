@@ -43,8 +43,6 @@ class Server {
                 eventManager->handle(events);
                 events.clear();
             }
-            ++count;
-
         }
         return ServerStatus::SERVER_SUCCESS;
     }
