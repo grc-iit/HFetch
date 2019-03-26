@@ -13,6 +13,9 @@
 #include <src/common/macros.h>
 #include <src/common/configuration_manager.h>
 #include <src/common/singleton.h>
+#include <boost/filesystem.hpp>
+namespace filesys = boost::filesystem;
+#include <boost/filesystem.hpp>
 
 int run_command(char* cmd){
     int ret;
@@ -28,12 +31,18 @@ static void setup_env(struct InputArgs args){
         for(i=0;i<args.layer_count_;++i){
             if(!args.layers[i].is_memory){
                 if(args.layers[i].is_local || CONF->my_rank_server==0){
-                    char cmd1[256];
-                    sprintf(cmd1,"rm %s/*",args.layers[i].mount_point_);
-                    run_command(cmd1);
                     char cmd2[256];
                     sprintf(cmd2,"mkdir -p %s/",args.layers[i].mount_point_);
                     run_command(cmd2);
+                    filesys::path pathObj(args.layers[i].mount_point_);
+                    if(!filesys::is_empty(pathObj)){
+                        char cmd1[256];
+                        sprintf(cmd1,"rm %s/*",args.layers[i].mount_point_);
+                        run_command(cmd1);
+                    }
+
+
+
                 }
             }
         }
