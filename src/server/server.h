@@ -48,7 +48,7 @@ class Server {
     }
 
     ServerStatus runMonitorServerInternal(std::future<void> futureObj){
-        std::string name="monitor_thread";
+        /*std::string name="monitor_thread";
         pthread_setname_np(pthread_self(), name.c_str());
         hardwareMonitor->AsyncMonitor();
         std::vector<Event> total_events=std::vector<Event>();
@@ -60,7 +60,7 @@ class Server {
                 events.clear();
             }
         }
-        hardwareMonitor->Stop();
+        hardwareMonitor->Stop();*/
         return ServerStatus::SERVER_SUCCESS;
     }
 public:
@@ -148,8 +148,8 @@ public:
             monitor_server_exit_signal[i].set_value();
             client_server_exit_signal[i].set_value();
             /* wait for servers to end */
-            monitor_server_workers[i].join();
-            client_server_workers[i].join();
+            if(monitor_server_workers[i].joinable()) monitor_server_workers[i].join();
+            if(client_server_workers[i].joinable()) client_server_workers[i].join();
         }
     }
 
