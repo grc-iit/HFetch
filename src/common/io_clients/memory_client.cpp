@@ -91,7 +91,8 @@ ServerStatus MemoryClient::Delete(PosixFile file) {
                 char* data = static_cast<char *>(malloc(iter.second.GetSize() - file.GetSize()));
                 auto shm = new bip::managed_shared_memory(bip::open_only, iter.second.filename.c_str());
                 MyShmString *str = shm->find<MyShmString>("myShmString").first;
-                memcpy(data,str->c_str(),file.segment.start - 1);
+                if(file.segment.start > 0)
+                memcpy(data,str->c_str(),file.segment.start);
                 memcpy(data+file.segment.start, str->c_str() + file.segment.end,iter.second.GetSize() - file.segment.end);
                 iter.second.segment.end=iter.second.GetSize() - file.GetSize();
                 data_map.Put(file.filename, iter.second);

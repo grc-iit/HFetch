@@ -49,6 +49,7 @@ int main(int argc, char*argv[]){
         sprintf(command,"dd if=/dev/urandom of=%s bs=%dM count=32",filename,my_rank_size/MB);
         run_command(command);
     }
+    MPI_Barrier(MPI_COMM_WORLD);
     if (my_rank == 0) {
         printf("Press any key to start program\n");
         getchar();

@@ -73,8 +73,8 @@ public:
          * Move this layer data to next layer and update MDM */
         while(iter!=layerScoreMap.end()){
             if(iter->second.second.GetSize() < space_avail){
-                auto orig_pieces = Split(iter->second.first,amount);
-                auto buf_pieces = Split(iter->second.second,amount);
+                auto orig_pieces = Split(iter->second.first,space_avail);
+                auto buf_pieces = Split(iter->second.second,space_avail);
                 PosixFile source = buf_pieces[1];
                 PosixFile destination = source;
                 destination.layer = *layer.next;
