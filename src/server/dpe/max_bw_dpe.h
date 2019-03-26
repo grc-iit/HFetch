@@ -28,6 +28,10 @@ public:
                                                        long original_index=0);
 
     bool IsAllowed(double score, double min_score, double max_score);
+
+    std::vector<pair<PosixFile, PosixFile>> PlaceDataInLayer(PosixFile &file, Layer &layer, long &original_index);
+
+    vector<PosixFile> SplitInParts(PosixFile file, bool b);
 };
 
 

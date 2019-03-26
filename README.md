@@ -15,6 +15,10 @@ This README would normally document whatever steps are necessary to get your app
 * Dependencies
 * Database configuration
 * How to run tests
+#servers
+
+#clients
+`mpirun -n $((64*8)) -f hostfile ./basic -s 8 -r 64`
 * Deployment instructions
 
 ### Contribution guidelines ###

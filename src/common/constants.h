@@ -16,6 +16,7 @@ const double LAMDA_FOR_SCORE=0.5;
 const std::string FILE_SEPARATOR="/";
 const size_t MB=1024*1024;
 const ScoreType DEFAULT_SCORE_TYPE=ScoreType::LRF_SCORE;
+const int SEGMENT_SIZE=16*1024*1024;
 
 
 
