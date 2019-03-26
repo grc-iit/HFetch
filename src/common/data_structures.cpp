@@ -31,7 +31,6 @@ std::ostream &operator<<(std::ostream &os, InputArgs const &m){
                 << "io_size_:" << m.io_size_<< ","
                 << "num_workers:" << m.num_workers << ","
                 << "layer_count_:" << m.layer_count_<< ","
-                << "ranks_per_server_:" << m.ranks_per_server_<< ","
                 << "direct_io_:" << m.direct_io_ << ","
                 << "iteration_:" << m.iteration_ << ",";
     os          << "layers:[";

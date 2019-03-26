@@ -35,7 +35,6 @@ typedef struct InputArgs{
     LayerInfo* layers;
     size_t iteration_;
     size_t direct_io_;
-    int ranks_per_server_;
     size_t num_workers;
     int max_files;
     int num_servers;
