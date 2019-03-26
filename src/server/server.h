@@ -33,9 +33,9 @@ class Server {
         std::string name="client_thread";
         pthread_setname_np(pthread_self(), name.c_str());
         std::vector<Event> events=std::vector<Event>();
-        while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
+        while(true){
             AutoTrace trace = AutoTrace("Server::runClientServerInternal");
-            //app_event_queue.WaitForElement(CONF->my_server);
+            app_event_queue.WaitForElement(CONF->my_server);
             auto result = app_event_queue.Pop(CONF->my_server);
             if(result.first){
                 events.push_back(result.second);
@@ -44,6 +44,9 @@ class Server {
                 eventManager->handle(events);
                 events.clear();
             }
+            /*if(futureObj.wait_for(std::chrono::milliseconds(2)) != std::future_status::timeout){
+                break;
+            }*/
         }
         return ServerStatus::SERVER_SUCCESS;
     }
