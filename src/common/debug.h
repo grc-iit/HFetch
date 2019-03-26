@@ -33,6 +33,7 @@
 #include <execinfo.h>
 #include <tuple>
 #include "data_structure.h"
+#include <thread>
 
 
 /**
@@ -123,11 +124,13 @@ public:
     template <typename... Args>
     AutoTrace(std::string string,Args... args):m_line(string)
     {
+        char thread_name[256];
+        pthread_setname_np(pthread_self(), thread_name);
         std::stringstream stream;
         stream << "\033[31m";
         if(rank == -1) MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        stream <<++item<<";"<< rank << ";" <<m_line << ";";
+        stream <<++item<<";"<<thread_name<<";"<< rank << ";" <<m_line << ";";
 #endif
 #if  defined(HERMES_TIMER)
         stream <<";;";
@@ -158,9 +161,11 @@ public:
     ~AutoTrace()
     {
         std::stringstream stream;
+        char thread_name[256];
+        pthread_setname_np(pthread_self(), thread_name);
         stream << "\033[31m";
 #if defined(HERMES_TRACE) || defined(HERMES_TIMER)
-        stream <<item-- <<";"<< rank << ";" << m_line << ";";
+        stream <<item-- <<";"<<thread_name<<";"<< rank << ";" << m_line << ";";
 #endif
 #if defined(HERMES_TRACE)
         stream  <<";";
