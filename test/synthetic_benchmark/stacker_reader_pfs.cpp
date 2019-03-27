@@ -99,8 +99,8 @@ int main(int argc, char*argv[]){
 
     switch(input.type){
         case ReaderType::READ_ENTIRE_EACH_TS:{
-            size_t read_iterations=2;
-            size_t read_size = file_size/read_iterations;
+            size_t read_size = 1*1024*1024;
+            size_t read_iterations=file_size/read_size;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 for(int j=0;j<read_iterations;++j){
@@ -113,8 +113,8 @@ int main(int argc, char*argv[]){
             break;
         }
         case ReaderType::READ_ENTIRE_EVERY_HALF_TS:{
-            size_t read_iterations=2;
-            size_t read_size = file_size/read_iterations;
+            size_t read_size = 1*1024*1024;
+            size_t read_iterations=file_size/read_size;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 if(i%2==0){
@@ -129,8 +129,8 @@ int main(int argc, char*argv[]){
             break;
         }
         case ReaderType::READ_ENTIRE_MULTI_TS:{
+            size_t read_size = 1*1024*1024;
             size_t read_iterations=timesteps/4;
-            size_t read_size = file_size/read_iterations;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 std::fread(buf,read_size,1,fh);
@@ -141,8 +141,8 @@ int main(int argc, char*argv[]){
             break;
         }
         case ReaderType::READ_ENTIRE_RANDOM_HALF_TS:{
-            size_t read_iterations=2;
-            size_t read_size = file_size/read_iterations;
+            size_t read_size = 1*1024*1024;
+            size_t read_iterations=file_size/read_size;
             void* buf = malloc(read_size);
             srand(200);
             for(size_t i=0;i<timesteps;++i){
