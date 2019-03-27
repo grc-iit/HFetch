@@ -77,7 +77,7 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
     args.num_workers=1;
     args.ranks_per_server_=1;
     args.is_logging=false;
-    while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:m:s:c:a:p:")) != -1)
+    while ((opt = getopt (argc, argv, "l:i:f:n:d:r:w:m:s:c:a:p:b:e:")) != -1)
     {
         switch (opt)
         {
