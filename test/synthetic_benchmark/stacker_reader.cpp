@@ -70,6 +70,13 @@ inline ReaderInput ParseArgs(int argc,char* argv[]){
 int main(int argc, char*argv[]){
     signal(SIGABRT, handler);
     signal(SIGSEGV, handler);
+    signal(SIGKILL, handler);
+    signal(SIGHUP, handler);
+    signal(SIGINT, handler);
+    signal(SIGQUIT, handler);
+    signal(SIGILL, handler);
+    signal(SIGFPE, handler);
+    signal(SIGPIPE, handler);
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
