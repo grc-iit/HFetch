@@ -154,7 +154,11 @@ public:
 
     void stop(){
         AutoTrace trace = AutoTrace("Server::stop");
+        while(app_event_queue.Size(CONF->my_server) > 0){
+            usleep(10);
+        }
         for (int i = 0; i < num_workers; ++i) {
+
             /* Issue server kill signals */
             /*monitor_server_exit_signal[i].set_value();*/
             client_server_exit_signal[i].set_value();
