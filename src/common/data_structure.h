@@ -336,7 +336,7 @@ typedef struct PosixFile{
     CharStruct filename;
     Segment segment;
     Layer layer;
-    bip::string data;
+    std::string data;
     PosixFile():filename(),segment(),layer(*Layer::LAST),data(){}
     PosixFile(const PosixFile &other) : filename(other.filename),segment(other.segment),layer(other.layer),data(other.data) {} /* copy constructor */
     PosixFile(PosixFile &&other) : filename(other.filename),segment(other.segment),layer(other.layer),data(other.data) {} /* move constructor*/
@@ -539,7 +539,7 @@ namespace clmdep_msgpack {
                         input.filename = o.via.array.ptr[0].as<CharStruct>();
                         input.segment = o.via.array.ptr[1].as<Segment>();
                         input.layer = Layer(o.via.array.ptr[2].as<uint8_t>());
-                        input.data = o.via.array.ptr[3].as<bip::string>();
+                        input.data = o.via.array.ptr[3].as<std::string>();
                        /* std::string s=o.via.array.ptr[3].as<std::string>();
                         if(s.size()>0){
                             input.data= static_cast<char *>(malloc(s.size() + 1));
