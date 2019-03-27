@@ -26,7 +26,7 @@ public:
     ~MemoryClient(){
         AutoTrace trace = AutoTrace("~MemoryClient");
         if(CONF->is_server){
-            auto datas = data_map.GetAllData();
+            auto datas = data_map.GetAllDataInServer();
             for(auto data:datas){
                 bip::shared_memory_object::remove(data.second.filename.c_str());
             }
