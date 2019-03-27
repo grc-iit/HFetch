@@ -38,7 +38,7 @@ public:
                      bool is_server_,
                      uint16_t my_server_,
                      int num_servers_): is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
-              comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(),func_prefix(name_){
+              comm_size(1), my_rank(0), memory_allocated(1024ULL), name(name_), segment(),func_prefix(name_){
         AutoTrace trace = AutoTrace("GlobalClock",name_,is_server_,my_server_,num_servers_);
         MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
         MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);

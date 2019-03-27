@@ -71,7 +71,7 @@ public:
                             uint16_t my_server_,
                             int num_servers_)
             : is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
-              comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(), mymap(),func_prefix(name_){
+              comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 128ULL), name(name_), segment(), mymap(),func_prefix(name_){
         AutoTrace trace = AutoTrace("DistributedMap",name_,is_server_,my_server_,num_servers_);
         /* Initialize MPI rank and size of world */
         MPI_Comm_size(MPI_COMM_WORLD, &comm_size);

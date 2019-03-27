@@ -64,7 +64,7 @@ public:
                                      uint16_t my_server_,
                                      int num_servers_)
             : is_server(is_server_), my_server(my_server_), num_servers(num_servers_),
-              comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 1024ULL), name(name_), segment(),
+              comm_size(1), my_rank(0), memory_allocated(1024ULL * 1024ULL * 128ULL), name(name_), segment(),
               queue(),func_prefix(name_){
         AutoTrace trace = AutoTrace("DistributedMessageQueue(local)",name_,is_server_,my_server_,num_servers_);
         /* Initialize MPI rank and size of world */
