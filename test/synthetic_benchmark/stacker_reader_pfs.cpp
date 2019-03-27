@@ -72,14 +72,14 @@ int main(int argc, char*argv[]){
         sprintf(filename_1, "%s/pfs/test_0.bat", pfs_path);
         if(!exists(filename_1)){
             char command[256];
-            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d",filename_1,MB,file_size/MB);
+            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d >& /dev/null",filename_1,MB,file_size/MB);
             run_command(command);
         }
         char filename_2[256];
         sprintf(filename_2, "%s/pfs/test_1.bat", pfs_path);
         if(!exists(filename_2)){
             char command[256];
-            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d",filename_2,MB,file_size/MB);
+            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d >& /dev/null",filename_2,MB,file_size/MB);
             run_command(command);
         }
         printf("Data is prepared for the test\n");
