@@ -161,8 +161,8 @@ int main(int argc, char*argv[]){
     }
     std::fclose(fh);
     double v = t.endTime();
-    MPI_Barrier(MPI_COMM_WORLD);
     printf("rank:%d hit ratio %f time %f\n",my_rank,CONF->hit/(CONF->total*1.0),v);
+    MPI_Barrier(MPI_COMM_WORLD);
     hfetch::MPI_Finalize();
     //clean_env(args);
     return 0;
