@@ -142,9 +142,9 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
                 args.num_workers= static_cast<size_t>(atoi(optarg));
                 break;
             }
-            default:               /* '?' */
-                fprintf (stderr, "Usage: %s [-l layer_count;l(i)_capacity_mb-l(i)_bandwidth-l(i)_is_memory-l(i)_mount_point] [-i io_size_per_request]  [-f pfs_path] [-d direct io true/false] [-n request repetition] [-r ranks_per_server] [-w num_workers]\n", argv[0]);
-                exit (EXIT_FAILURE);
+            default:{}               /* '?' */
+                /*fprintf (stderr, "Usage: %s [-l layer_count;l(i)_capacity_mb-l(i)_bandwidth-l(i)_is_memory-l(i)_mount_point] [-i io_size_per_request]  [-f pfs_path] [-d direct io true/false] [-n request repetition] [-r ranks_per_server] [-w num_workers]\n", argv[0]);
+                exit (EXIT_FAILURE);*/
         }
     }
     if(args.layer_count_ == 0){

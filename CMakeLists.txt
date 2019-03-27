@@ -14,7 +14,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INSTALL_DIR}/include/  -L${CMAKE_BIN
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_DEBUG")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_TIMER")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_TRACE")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHERMES_TRACE")
 
 
 include_directories(${INSTALL_DIR}/include/)
@@ -87,3 +87,5 @@ target_link_libraries(hfetch_server ${LIB_FLAGS})
 #HFetch Test Cases
 
 add_subdirectory(test)
+
+add_subdirectory(test/synthetic_benchmark)
