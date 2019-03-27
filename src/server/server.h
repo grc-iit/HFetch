@@ -34,10 +34,10 @@ class Server {
             std::string name="client_thread";
             pthread_setname_np(pthread_self(), name.c_str());
             std::vector<Event> events=std::vector<Event>();
+            int count=0;
             while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
                 try{
                     AutoTrace trace = AutoTrace("Server::runClientServerInternal");
-                    app_event_queue.WaitForElement(CONF->my_server);
                     auto result = app_event_queue.Pop(CONF->my_server);
                     if(result.first){
                         events.push_back(result.second);
@@ -45,7 +45,10 @@ class Server {
                     if(events.size() > 0 && (events.size() >= MAX_PREFETCH_EVENTS)){
                         eventManager->handle(events);
                         events.clear();
+                    }else{
+                        if(count==0) printf("Server %d, No Events in Queue\n",CONF->my_server);
                     }
+                    count++;
                 }catch(const std::exception& e){
                     std::cerr << e.what() << '\n';
                     std::cerr << boost::stacktrace::stacktrace();
@@ -156,6 +159,7 @@ public:
         AutoTrace trace = AutoTrace("Server::stop");
         while(app_event_queue.Size(CONF->my_server) > 0){
             usleep(10);
+            printf("Server %d, Still Events in Queue\n",CONF->my_server);
         }
         for (int i = 0; i < num_workers; ++i) {
 
