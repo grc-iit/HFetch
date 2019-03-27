@@ -34,6 +34,7 @@ int main(int argc, char*argv[]){
     }
     MPI_Barrier(MPI_COMM_WORLD);
     Singleton<Server>::GetInstance()->stop();
+    printf("Stopped Server:%d\n",my_rank);
     MPI_Finalize();
     return 0;
 }
