@@ -7,8 +7,7 @@
 #include <boost/stacktrace.hpp>
 
 int main(int argc, char*argv[]){
-    signal(SIGABRT, handler);
-    signal(SIGSEGV, handler);
+    addSignals();
     std::string name="hfetch_server";
     pthread_setname_np(pthread_self(), name.c_str());
     MPI_Init(&argc,&argv);

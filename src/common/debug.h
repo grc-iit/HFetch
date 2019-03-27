@@ -41,6 +41,7 @@
  *
  * @param sig
  */
+
 inline void handler(int sig) {
     void *array[10];
     size_t size;
@@ -51,6 +52,18 @@ inline void handler(int sig) {
     fprintf(stderr, "Error: signal %d\n", sig);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     exit(0);
+}
+inline void addSignals(){
+    signal(SIGABRT, handler);
+    signal(SIGSEGV, handler);
+    signal(SIGKILL, handler);
+    signal(SIGHUP, handler);
+    signal(SIGINT, handler);
+    signal(SIGQUIT, handler);
+    signal(SIGILL, handler);
+    signal(SIGFPE, handler);
+    signal(SIGPIPE, handler);
+    signal(SIGBUS, handler);
 }
 /**
  * various macros to print variables and messages.

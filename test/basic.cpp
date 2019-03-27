@@ -31,8 +31,7 @@ inline bool exists(char* name) {
 }
 
 int main(int argc, char*argv[]){
-    signal(SIGABRT, handler);
-    signal(SIGSEGV, handler);
+    addSignals();
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
 
     //setup_env(args);
