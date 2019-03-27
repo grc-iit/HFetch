@@ -22,6 +22,8 @@ This README would normally document whatever steps are necessary to get your app
 
 #clients
 `mpirun -n $((64*8)) -f hostfile ./basic -s 8 -r 64`
+
+`mpirun -n $((1*8)) -f hostfile1 ./stacker_reader -s 8 -r 1 -n 2 -b 0`
 * Deployment instructions
 
 ### Contribution guidelines ###
