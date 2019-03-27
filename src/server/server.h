@@ -159,8 +159,10 @@ public:
     void stop(){
         AutoTrace trace = AutoTrace("Server::stop");
         int count=0;
-        while(app_event_queue.Size(CONF->my_server) > 0){
-            if(count++==0) printf("Server %d, Still Events in Queue\n",CONF->my_server);
+        size_t size=app_event_queue.Size(CONF->my_server);
+        while(size > 0){
+            if(count++==0) printf("Server %d, %d Events in Queue\n", CONF->my_server, static_cast<int>(size));
+            size = app_event_queue.Size(CONF->my_server);
         }
         printf("Server %d, No Events in Queue\n",CONF->my_server);
         for (int i = 0; i < num_workers; ++i) {
