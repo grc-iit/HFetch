@@ -45,6 +45,7 @@ class Server {
                     if(events.size() > 0 && (events.size() >= MAX_PREFETCH_EVENTS)){
                         eventManager->handle(events);
                         events.clear();
+                        count=0;
                     }else{
                         if(count==0) printf("Server %d, No Events in Queue\n",CONF->my_server);
                     }
