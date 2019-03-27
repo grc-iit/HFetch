@@ -4,7 +4,7 @@ set(CTEST_ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/")
 set(ENV{LD_PRELOAD} "ENV{LD_PRELOAD} ${CMAKE_BINARY_DIR}")
 
 #Execute basic examples
-set(examples stacker_reader)
+set(examples stacker_reader stacker_reader_pfs)
 foreach (example ${examples})
     add_executable (${example} ${example}.cpp ../util.h)
     add_dependencies(${example} hfetch)

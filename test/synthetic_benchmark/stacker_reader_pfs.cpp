@@ -10,21 +10,6 @@
 #include <sys/stat.h>
 #include "../util.h"
 
-char* GenerateData(long size){
-    char* data= static_cast<char *>(malloc(size));
-    size_t num_elements=size;
-    size_t offset=0;
-    srand(200);
-    for(int i=0;i<num_elements;++i) {
-        int random = rand();
-        char c = static_cast<char>((random % 26) + 'a');
-        memcpy(data + offset, &c, sizeof(char));
-        offset += sizeof(char);
-    }
-    return data;
-}
-
-
 inline bool exists(char* name) {
     struct stat buffer;
     return (stat(name, &buffer) == 0);
@@ -110,7 +95,7 @@ int main(int argc, char*argv[]){
     t.startTime();
     char filename[256];
     sprintf(filename, "%s/pfs/test_%d.bat", pfs_path,my_rank%2);
-    FILE* fh = hfetch::fopen(filename,"r");
+    FILE* fh = std::fopen(filename,"r");
     size_t timesteps=args.iteration_;
 
     switch(input.type){
@@ -120,10 +105,10 @@ int main(int argc, char*argv[]){
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 for(int j=0;j<read_iterations;++j){
-                    hfetch::fread(buf,read_size,1,fh);
+                    std::fread(buf,read_size,1,fh);
                     if(input.compute_sec!=0) sleep(input.compute_sec);
                 }
-                hfetch::fseek(fh,0L,SEEK_SET);
+                std::fseek(fh,0L,SEEK_SET);
             }
             free(buf);
             break;
@@ -135,10 +120,10 @@ int main(int argc, char*argv[]){
             for(size_t i=0;i<timesteps;++i){
                 if(i%2==0){
                     for(int j=0;j<read_iterations;++j){
-                        hfetch::fread(buf,read_size,1,fh);
+                        std::fread(buf,read_size,1,fh);
                         if(input.compute_sec!=0) sleep(input.compute_sec);
                     }
-                    hfetch::fseek(fh,0L,SEEK_SET);
+                    std::fseek(fh,0L,SEEK_SET);
                 }
             }
             free(buf);
@@ -149,9 +134,9 @@ int main(int argc, char*argv[]){
             size_t read_size = file_size/read_iterations;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
-                hfetch::fread(buf,read_size,1,fh);
+                std::fread(buf,read_size,1,fh);
                 if(input.compute_sec!=0) sleep(input.compute_sec);
-                if(timesteps%read_iterations==0) hfetch::fseek(fh,0L,SEEK_SET);
+                if(timesteps%read_iterations==0) std::fseek(fh,0L,SEEK_SET);
             }
             free(buf);
             break;
@@ -165,17 +150,17 @@ int main(int argc, char*argv[]){
                 int random = rand();
                 if(random%2==0){
                     for(int j=0;j<read_iterations;++j){
-                        hfetch::fread(buf,read_size,1,fh);
+                        std::fread(buf,read_size,1,fh);
                         if(input.compute_sec!=0) sleep(input.compute_sec);
                     }
-                    hfetch::fseek(fh,0L,SEEK_SET);
+                    std::fseek(fh,0L,SEEK_SET);
                 }
             }
             free(buf);
             break;
         }
     }
-    hfetch::fclose(fh);
+    std::fclose(fh);
     double v = t.endTime();
     MPI_Barrier(MPI_COMM_WORLD);
     printf("rank:%d hit ratio %f time %f\n",my_rank,CONF->hit/(CONF->total*1.0),v);
