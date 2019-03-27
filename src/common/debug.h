@@ -56,11 +56,6 @@ inline void handler(int sig) {
 inline void addSignals(){
     signal(SIGABRT, handler);
     signal(SIGSEGV, handler);
-    signal(SIGKILL, handler);
-    signal(SIGHUP, handler);
-    signal(SIGINT, handler);
-    signal(SIGQUIT, handler);
-    signal(SIGILL, handler);
     signal(SIGFPE, handler);
     signal(SIGPIPE, handler);
     signal(SIGBUS, handler);

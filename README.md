@@ -13,6 +13,9 @@ This README would normally document whatever steps are necessary to get your app
 * Summary of set up
 * Configuration
 * Dependencies
+#mpich 3.3+
+`./configure --prefix=/home/hdevarajan/software/install --enable-fast=03 --enable-shared --enable-romio --enable-threads --disable-fortran --disable-fc --enable-onsig --enable-debuginfo --enable-g=handle`
+
 * Database configuration
 * How to run tests
 #servers
