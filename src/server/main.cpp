@@ -30,8 +30,9 @@ int main(int argc, char*argv[]){
     Singleton<Server>::GetInstance()->async_run(args.num_workers);
     if (CONF->my_rank_world == 0) {
         printf("Press any key to exit server\n");
+        getchar();
     }
-    getchar();
+    MPI_Barrier(MPI_COMM_WORLD);
     Singleton<Server>::GetInstance()->stop();
     MPI_Finalize();
     return 0;
