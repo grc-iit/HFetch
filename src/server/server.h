@@ -158,10 +158,11 @@ public:
 
     void stop(){
         AutoTrace trace = AutoTrace("Server::stop");
+        int count=0;
         while(app_event_queue.Size(CONF->my_server) > 0){
-            usleep(10);
-            printf("Server %d, Still Events in Queue\n",CONF->my_server);
+            if(count++==0) printf("Server %d, Still Events in Queue\n",CONF->my_server);
         }
+        printf("Server %d, No Events in Queue\n",CONF->my_server);
         for (int i = 0; i < num_workers; ++i) {
 
             /* Issue server kill signals */
