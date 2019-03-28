@@ -89,10 +89,13 @@ size_t hfetch::fread(void *ptr, size_t size, size_t count, FILE *fh) {
             for(auto data:datas){
                 if(data.first.layer != *Layer::LAST) CONF->hit++;
                 CONF->total++;
-                data.second.data.reserve(data.second.GetSize());
-                Singleton<IOClientFactory>::GetInstance()->GetClient(data.first.layer.io_client_type)->Read(data.first,data.second);
-                memcpy((char*)ptr+original_offset,data.second.data.data(),data.second.GetSize());
-                original_offset+=data.second.GetSize();
+                if(data.second.GetSize()>0){
+                    data.second.data.reserve(data.second.GetSize());
+                    Singleton<IOClientFactory>::GetInstance()->GetClient(data.first.layer.io_client_type)->Read(data.first,data.second);
+                    memcpy((char*)ptr+original_offset,data.second.data.data(),data.second.GetSize());
+                    original_offset+=data.second.GetSize();
+                }else printf("Rank %d, Data size < 0\n",CONF->my_rank_world);
+
             }
         }else{
             std::fread(ptr,size,count,fh);

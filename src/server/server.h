@@ -30,8 +30,8 @@ class Server {
     std::promise<void>* client_server_exit_signal,*monitor_server_exit_signal;
     DistributedMessageQueue<Event> app_event_queue;
 
-    ServerStatus runClientServerInternal(std::future<void> futureObj){
-            std::string name="client_thread";
+    ServerStatus runClientServerInternal(std::future<void> futureObj,int index){
+            std::string name="client_thread_"+std::to_string(index);
             pthread_setname_np(pthread_self(), name.c_str());
             std::vector<Event> events=std::vector<Event>();
             int count=0;
@@ -47,7 +47,7 @@ class Server {
                         events.clear();
                         count=0;
                     }else{
-                        if(count==0) printf("Server %d, No Events in Queue\n",CONF->my_server);
+                        if(count==0 && index==0) printf("Server %d, No Events in Queue\n",CONF->my_server);
                     }
                     count++;
                 }catch(const std::exception& e){
@@ -138,7 +138,7 @@ public:
             monitor_server_exit_signal=new std::promise<void>[numWorker];
             for(int i=0;i<numWorker;++i) {
                 std::future<void> futureObj = client_server_exit_signal[i].get_future();
-                client_server_workers[i]=std::thread (&Server::runClientServerInternal, this, std::move(futureObj));
+                client_server_workers[i]=std::thread (&Server::runClientServerInternal, this, std::move(futureObj),i);
             /*    std::future<void> futureObj2 = monitor_server_exit_signal[i].get_future();
                 monitor_server_workers[i]=std::thread (&Server::runMonitorServerInternal, this, std::move(futureObj2));
             */}
