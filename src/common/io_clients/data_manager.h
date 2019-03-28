@@ -21,15 +21,16 @@ public:
     }
     ServerStatus Move(PosixFile source, PosixFile destination, bool deleteSource = true) {
         AutoTrace trace = AutoTrace("DataManager::Move",source,destination,deleteSource);
-        if(source.GetSize()<0) std::cerr<<source.GetSize()<<"\n";
-        destination.data.reserve(source.GetSize());
         ServerStatus status;
-        status = ioFactory->GetClient(source.layer.io_client_type)->Read(source,destination);
-        if(status != SERVER_SUCCESS) return status;
-        status = ioFactory->GetClient(destination.layer.io_client_type)->Write(destination,destination);
-        if(status != SERVER_SUCCESS) return status;
-        destination.data.erase();
-        if(deleteSource) status = ioFactory->GetClient(source.layer.io_client_type)->Delete(source);
+        if(source.GetSize()>0){
+            destination.data.reserve(source.GetSize());
+            status = ioFactory->GetClient(source.layer.io_client_type)->Read(source,destination);
+            if(status != SERVER_SUCCESS) return status;
+            status = ioFactory->GetClient(destination.layer.io_client_type)->Write(destination,destination);
+            if(status != SERVER_SUCCESS) return status;
+            destination.data.erase();
+            if(deleteSource) status = ioFactory->GetClient(source.layer.io_client_type)->Delete(source);
+        }
         return status;
     }
 
