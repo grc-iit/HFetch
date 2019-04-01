@@ -87,5 +87,6 @@ target_link_libraries(hfetch_server ${LIB_FLAGS})
 #HFetch Test Cases
 
 add_subdirectory(test)
+add_subdirectory(test/apps)
 
 add_subdirectory(test/synthetic_benchmark)
