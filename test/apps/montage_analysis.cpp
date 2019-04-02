@@ -16,7 +16,7 @@ inline bool exists(const char* name) {
 }
 int main(int argc, char*argv[]){
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
-    const int MULTIPLIER=128;
+    const int MULTIPLIER=1024;
     char *pfs_path = getenv("RUN_DIR");
     std::string trace_file_name = "montage_analysis.csv";
     std::string file_name = std::string(pfs_path)+"/pfs/montage_analysis.dat";
