@@ -16,17 +16,19 @@ inline bool exists(const char* name) {
 }
 int main(int argc, char*argv[]){
     InputArgs args = hfetch::MPI_Init(&argc,&argv);
+    const int MULTIPLIER=128;
+    char *pfs_path = getenv("RUN_DIR");
     std::string trace_file_name = "wrf_analysis.csv";
-    std::string file_name = "wrf_analysis.dat";
+    std::string file_name = std::string(pfs_path)+"/pfs/wrf_analysis.dat";
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     size_t readsize,len=0;
-    char line[128];
+    char* line=(char*)malloc(128);
     /* Prepare data */
     FILE* trace = std::fopen(trace_file_name.c_str(), "r");
-    size_t max_size;
-    while ((readsize = getline(reinterpret_cast<char **>(&line), &len, trace)) != -1) {
+    size_t max_size=0;
+    while ((readsize = getline(&line, &len, trace)) != -1) {
         if (readsize < 4) {
             break;
         }
@@ -36,11 +38,12 @@ int main(int argc, char*argv[]){
         char* word = strtok(line, ",");
         std::string operation(word);
         word = strtok(NULL, ",");
-        offset = atol(word);
+        offset = atol(word)*MULTIPLIER;
         word = strtok(NULL, ",");
-        request_size = atol(word);
+        request_size = atol(word)*MULTIPLIER;
         max_size=max_size<offset+request_size?offset+request_size:max_size;
     }
+    free(line);
     std::fclose(trace);
     max_size+=(max_size%MB);
     if(my_rank==0){
@@ -72,15 +75,17 @@ int main(int argc, char*argv[]){
         char* word = strtok(line, ",");
         std::string operation(word);
         word = strtok(NULL, ",");
-        offset = atol(word);
+        offset = atol(word)*MULTIPLIER;
         word = strtok(NULL, ",");
-        request_size = atol(word);
+        request_size = atol(word)*MULTIPLIER;
         if (operation == "FOPEN") {
             t.resumeTime();
             file = hfetch::fopen(file_name.c_str(), "r+");
             t.pauseTime();
         } else if (operation == "FCLOSE") {
+            t.resumeTime();
             hfetch::fclose(file);
+            t.pauseTime();
         } else if (operation == "FWRITE") {
             char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
             t.resumeTime();
