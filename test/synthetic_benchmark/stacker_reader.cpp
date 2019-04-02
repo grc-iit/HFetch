@@ -97,7 +97,7 @@ int main(int argc, char*argv[]){
             sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d > /dev/null 2>&1",filename_2,MB,file_size/MB);
             run_command(command);
         }
-        printf("Data is prepared for the test\n");
+        printf("Data is prepared for the test of size %d MB\n",file_size*2/MB);
     }
     MPI_Barrier(MPI_COMM_WORLD);
     if (my_rank == 0) {
