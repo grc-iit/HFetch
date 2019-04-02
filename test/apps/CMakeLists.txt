@@ -8,6 +8,9 @@ set(examples montage_analysis wrf_analysis)
 foreach (example ${examples})
     add_executable (${example} ${example}.cpp ../util.h)
     add_dependencies(${example} hfetch)
+    add_custom_command(TARGET ${example} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_SOURCE_DIR}/test/apps/${example}.csv $<TARGET_FILE_DIR:${example}>)
     target_include_directories(${example} PRIVATE "${CMAKE_BINARY_DIR}/")
     set_target_properties(${example} PROPERTIES ENV TEST_ENV="LD_PRELOAD=-L${CMAKE_BINARY_DIR}/libhfetch.so")
     target_link_libraries(${example} ${LIB_FLAGS} -L${CMAKE_BINARY_DIR}/ -lhfetch)
