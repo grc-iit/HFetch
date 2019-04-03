@@ -174,7 +174,7 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
         layers[2].capacity_mb_ = 8*args.io_size_mb/16;
         layers[2].bandwidth = 400;
         layers[2].is_memory = false;
-        layers[2].is_local = true;
+        layers[2].is_local = false;
         sprintf(layers[3].mount_point_, "%s/pfs/", pfs);
         layers[3].capacity_mb_ = args.io_size_mb;
         layers[3].bandwidth = 100;
