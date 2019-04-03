@@ -14,13 +14,27 @@ inline bool exists(const char* name) {
 }
 int main(int argc, char*argv[]){
     MPI_Init(&argc,&argv);
-    const int MULTIPLIER=1024;
-    char *pfs_path = getenv("RUN_DIR");
-    std::string trace_file_name = "wrf_analysis.csv";
-    std::string file_name = std::string(pfs_path)+"/pfs/wrf_analysis.dat";
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    /*MPI_Barrier(MPI_COMM_WORLD);
+    if (my_rank == 0) {
+        printf("Press any key to start program\n");
+        getchar();
+    }
+    MPI_Barrier(MPI_COMM_WORLD);*/
+    const int MULTIPLIER=1024;
+    char *pfs_path = getenv("RUN_DIR");
+    string filename = std::string(argv[0]);
+    string directory;
+    const size_t last_slash_idx = filename.rfind('/');
+    if (std::string::npos != last_slash_idx)
+    {
+        directory = filename.substr(0, last_slash_idx);
+    }
+    std::string trace_file_name = directory+"/wrf_analysis.csv";
+    std::string file_name = std::string(pfs_path)+"/pfs/wrf_analysis.dat";
+
     size_t readsize,len=0;
     char* line=(char*)malloc(128);
     /* Prepare data */
@@ -86,12 +100,12 @@ int main(int argc, char*argv[]){
             std::fclose(file);
             t.pauseTime();
         } else if (operation == "FWRITE") {
-            char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
+            /*char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
             t.resumeTime();
             std::fseek(file, (size_t) offset,SEEK_SET);
             std::fwrite(writebuf, request_size,sizeof(char),file);
             t.pauseTime();
-            if(writebuf) free(writebuf);
+            if(writebuf) free(writebuf);*/
         }else if (operation == "FREAD") {
             char* readbuf = (char*)malloc((size_t) request_size);
             t.resumeTime();

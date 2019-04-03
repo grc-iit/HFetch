@@ -16,7 +16,14 @@ int main(int argc, char*argv[]){
     MPI_Init(&argc,&argv);
     const int MULTIPLIER=1024;
     char *pfs_path = getenv("RUN_DIR");
-    std::string trace_file_name = "montage_analysis.csv";
+    string filename = std::string(argv[0]);
+    string directory;
+    const size_t last_slash_idx = filename.rfind('/');
+    if (std::string::npos != last_slash_idx)
+    {
+        directory = filename.substr(0, last_slash_idx);
+    }
+    std::string trace_file_name = directory+"/montage_analysis.csv";
     std::string file_name = std::string(pfs_path)+"/pfs/montage_analysis.dat";
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
