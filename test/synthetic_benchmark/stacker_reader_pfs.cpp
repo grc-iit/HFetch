@@ -191,17 +191,10 @@ int main(int argc, char*argv[]){
     MPI_Allreduce(&v, &sum_time, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&v, &min_time, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     MPI_Allreduce(&v, &max_time, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-    double hit_ratio=CONF->hit/(CONF->total*1.0);
-    double sum_hit_ratio,min_hit_ratio,max_hit_ratio;
-    MPI_Allreduce(&hit_ratio, &sum_hit_ratio, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(&hit_ratio, &min_hit_ratio, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-    MPI_Allreduce(&hit_ratio, &max_hit_ratio, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-
     double mean_time = sum_time / comm_size;
-    double mean_hit_ratio = sum_hit_ratio / comm_size;
     if(my_rank == 0) {
         printf("mean_time,min_time,max_time,mean_hr,min_hr,max_hr\n");
-        printf("%f,%f,%f,%f,%f,%f\n",mean_time,min_time,max_time,mean_hit_ratio,min_hit_ratio,max_hit_ratio);
+        printf("%f,%f,%f,,,\n",mean_time,min_time,max_time);
     }
     MPI_Finalize();
     //clean_env(args);
