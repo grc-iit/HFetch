@@ -193,7 +193,7 @@ int main(int argc, char*argv[]){
     double mean_time = sum_time / comm_size;
     if(my_rank == 0) {
         printf("mean_time,min_time,max_time,mean_hr,min_hr,max_hr\n");
-        printf("%f,%f,%f,,,\n",mean_time,min_time,max_time);
+        printf("%f,%f,%f,,,\n",mean_time/1000,min_time/1000,max_time/1000);
     }
     MPI_Finalize();
     //clean_env(args);
