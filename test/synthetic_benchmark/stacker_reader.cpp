@@ -80,7 +80,7 @@ int main(int argc, char*argv[]){
         freopen(complete_log,"w+",stdout);
         freopen(complete_log,"a",stderr);
     }
-    size_t file_size = args.io_size_/2;
+    size_t file_size = args.io_size_mb*MB/2;
     char *pfs_path = getenv("RUN_DIR");
     if(my_rank==0){
         char filename_1[256];

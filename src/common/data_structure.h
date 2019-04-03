@@ -30,7 +30,7 @@ typedef struct LayerInfo {
 /* Input args structure for both lib and server */
 
 typedef struct InputArgs{
-    size_t io_size_;
+    size_t io_size_mb;
     char pfs_path[256];
     int layer_count_;
     LayerInfo* layers;

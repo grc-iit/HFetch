@@ -28,7 +28,7 @@ std::ostream &operator<<(std::ostream &os, LayerInfo const &m){
 std::ostream &operator<<(std::ostream &os, InputArgs const &m){
     os   << "{TYPE:InputArgs," << "num_servers:" << m.num_servers<< ","
                 << "max_files:" << m.max_files<< ","
-                << "io_size_:" << m.io_size_<< ","
+                << "io_size_:" << m.io_size_mb<< ","
                 << "num_workers:" << m.num_workers << ","
                 << "layer_count_:" << m.layer_count_<< ","
                 << "ranks_per_server_:" << m.ranks_per_server_<< ","

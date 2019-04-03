@@ -64,7 +64,7 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
     tfnd = 0;
     flags = 0;
     struct InputArgs args;
-    args.io_size_=1024*1024*1024;
+    args.io_size_mb=1024;
     args.layer_count_=0;
     args.pfs_path;
     args.iteration_=1;
@@ -107,7 +107,7 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
                 break;
             }
             case 'i':{
-                args.io_size_= (size_t) atoi(optarg);
+                args.io_size_mb= (size_t) atoi(optarg);
                 break;
             }
             case 's':{
@@ -161,22 +161,22 @@ static struct InputArgs parse_opts(int argc, char *argv[]){
 
         LayerInfo* layers=new LayerInfo[4];
         sprintf(layers[0].mount_point_, "%s/ramfs/", pfs);
-        layers[0].capacity_mb_ = 4*args.io_size_/MB/16;
+        layers[0].capacity_mb_ = 4*args.io_size_mb/16;
         layers[0].bandwidth = 80000;
         layers[0].is_memory = true;
         layers[0].is_local = true;
         sprintf(layers[1].mount_point_, "%s/nvme/", nvme);
-        layers[1].capacity_mb_ = 4*args.io_size_/MB/16;
+        layers[1].capacity_mb_ = 4*args.io_size_mb/16;
         layers[1].bandwidth = 2000;
         layers[1].is_memory = false;
         layers[1].is_local = true;
         sprintf(layers[2].mount_point_, "%s/bb/", bb);
-        layers[2].capacity_mb_ = 8*args.io_size_/MB/16;
+        layers[2].capacity_mb_ = 8*args.io_size_mb/16;
         layers[2].bandwidth = 400;
         layers[2].is_memory = false;
         layers[2].is_local = true;
         sprintf(layers[3].mount_point_, "%s/pfs/", pfs);
-        layers[3].capacity_mb_ = args.io_size_/MB;
+        layers[3].capacity_mb_ = args.io_size_mb;
         layers[3].bandwidth = 100;
         layers[3].is_memory = false;
         layers[3].is_local = false;

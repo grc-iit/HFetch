@@ -44,7 +44,7 @@ int main(int argc, char*argv[]){
         freopen(complete_log,"w+",stdout);
         freopen(complete_log,"a",stderr);
     }
-    size_t my_rank_size = args.io_size_/comm_size;
+    size_t my_rank_size = args.io_size_mb/comm_size;
     void* buf = malloc(my_rank_size);
     char *homepath = getenv("RUN_DIR");
     //printf("rank:%d, my_server:%d\n",my_rank,CONF->my_server);
