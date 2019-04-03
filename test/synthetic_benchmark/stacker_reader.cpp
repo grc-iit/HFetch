@@ -99,6 +99,7 @@ int main(int argc, char*argv[]){
         }
         printf("Data is prepared for the test of size %d MB\n",file_size*2/MB);
     }
+    run_command("sudo fm");
     MPI_Barrier(MPI_COMM_WORLD);
     if (my_rank == 0) {
         printf("Press any key to start program\n");
