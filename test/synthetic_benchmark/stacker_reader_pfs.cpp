@@ -170,7 +170,7 @@ int main(int argc, char*argv[]){
             for(size_t i=0;i<timesteps;++i){
                 for(int j=0;j<read_iterations;++j){
                     int random = rand();
-                    std::fseek(fh,(random%(read_iterations-1)*read_size,SEEK_SET);
+                    std::fseek(fh,(random%(read_iterations-1))*read_size,SEEK_SET);
                     std::fread(buf,read_size,1,fh);
                     if(input.compute_sec!=0) sleep(input.compute_sec);
                 }
