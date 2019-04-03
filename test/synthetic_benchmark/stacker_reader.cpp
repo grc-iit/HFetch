@@ -115,7 +115,7 @@ int main(int argc, char*argv[]){
     switch(input.type){
         case ReaderType::READ_ENTIRE_EACH_TS:{
             size_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size/comm_size;
+            size_t read_iterations=file_size/read_size/32;
             read_iterations=read_iterations==0?1:read_iterations;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
@@ -130,7 +130,7 @@ int main(int argc, char*argv[]){
         }
         case ReaderType::READ_ENTIRE_EVERY_STRIDE_TS:{
             ssize_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size/2;
+            size_t read_iterations=file_size/read_size/32;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 for(int j=0;j<read_iterations;++j){
@@ -146,7 +146,7 @@ int main(int argc, char*argv[]){
         }
         case ReaderType::READ_ENTIRE_SAME_TS:{
             size_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size/2;
+            size_t read_iterations=file_size/read_size/32;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 for(int j=0;j<read_iterations;++j){
@@ -165,7 +165,7 @@ int main(int argc, char*argv[]){
             srand(200);
 
             size_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size/2;
+            size_t read_iterations=file_size/read_size/32;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 for(int j=0;j<read_iterations;++j){
