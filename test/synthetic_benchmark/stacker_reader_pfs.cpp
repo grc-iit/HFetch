@@ -43,6 +43,8 @@ inline ReaderInput ParseArgs(int argc,char* argv[]){
     ReaderInput args;
     args.type=ReaderType::READ_ENTIRE_EACH_TS;
     args.compute_sec=0;
+    args.io_size_=1024*1024*1024;
+    args.iteration_=1;
     int opt;
     /* a:c:d:f:i:l:m:n:p:r:s:w: */
     optind=1;
