@@ -93,12 +93,12 @@ int main(int argc, char*argv[]){
             hfetch::fclose(file);
             t.pauseTime();
         } else if (operation == "FWRITE") {
-            char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
+            /*char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
             t.resumeTime();
             hfetch::fseek(file, (size_t) offset,SEEK_SET);
             hfetch::fwrite(writebuf, request_size,sizeof(char),file);
             t.pauseTime();
-            if(writebuf) free(writebuf);
+            if(writebuf) free(writebuf);*/
         }else if (operation == "FREAD") {
             char* readbuf = (char*)malloc((size_t) request_size);
             t.resumeTime();

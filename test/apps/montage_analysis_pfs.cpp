@@ -92,12 +92,12 @@ int main(int argc, char*argv[]){
             std::fclose(file);
             t.pauseTime();
         } else if (operation == "FWRITE") {
-            char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
+            c/*har* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
             t.resumeTime();
             std::fseek(file, (size_t) offset,SEEK_SET);
             std::fwrite(writebuf, request_size,sizeof(char),file);
             t.pauseTime();
-            if(writebuf) free(writebuf);
+            if(writebuf) free(writebuf);*/
         }else if (operation == "FREAD") {
             char* readbuf = (char*)malloc((size_t) request_size);
             t.resumeTime();
