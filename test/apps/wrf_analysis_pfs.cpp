@@ -107,6 +107,7 @@ int main(int argc, char*argv[]){
             t.pauseTime();
             if(writebuf) free(writebuf);*/
         }else if (operation == "FREAD") {
+            printf("Request Size: %ld",(size_t)request_size);
             char* readbuf = (char*)malloc((size_t) request_size);
             t.resumeTime();
             std::fseek(file, (size_t) offset,SEEK_SET);
