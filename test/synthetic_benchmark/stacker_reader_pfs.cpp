@@ -1,8 +1,6 @@
 //
 // Created by hariharan on 3/18/19.
 //
-
-#include <hfetch.h>
 #include <mpi.h>
 #include <src/common/macros.h>
 #include <src/common/configuration_manager.h>
@@ -40,6 +38,8 @@ typedef unsigned long long really_long;
 struct ReaderInput{
     ReaderType type;
     size_t compute_sec;
+    int iteration_;
+    size_t io_size_;
 };
 
 inline ReaderInput ParseArgs(int argc,char* argv[]){
@@ -61,26 +61,29 @@ inline ReaderInput ParseArgs(int argc,char* argv[]){
                 args.compute_sec= atoi(optarg);
                 break;
             }
+            case 'n':{
+                args.iteration_= (size_t) atoi(optarg);
+                break;
+            }
+            case 'i':{
+                args.io_size_= (size_t) atoi(optarg);
+                break;
+            }
             default: {}
         }
+
     }
     return args;
 }
 
 int main(int argc, char*argv[]){
     addSignals();
-    InputArgs args = hfetch::MPI_Init(&argc,&argv);
+    MPI_Init(&argc,&argv);
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     ReaderInput input = ParseArgs(argc,argv);
-    if(args.is_logging){
-        char complete_log[256];
-        sprintf(complete_log, "%s/run_%d.log", args.log_path,my_rank);
-        freopen(complete_log,"w+",stdout);
-        freopen(complete_log,"a",stderr);
-    }
-    size_t file_size = args.io_size_/2;
+    size_t file_size = input.io_size_/2;
     char *pfs_path = getenv("RUN_DIR");
     if(my_rank==0){
         char filename_1[256];
@@ -110,7 +113,7 @@ int main(int argc, char*argv[]){
     char filename[256];
     sprintf(filename, "%s/pfs/test_%d.bat", pfs_path,my_rank%2);
     FILE* fh = std::fopen(filename,"r");
-    size_t timesteps=args.iteration_;
+    size_t timesteps=input.iteration_;
 
     switch(input.type){
         case ReaderType::READ_ENTIRE_EACH_TS:{
@@ -200,7 +203,7 @@ int main(int argc, char*argv[]){
         printf("mean_time,min_time,max_time,mean_hr,min_hr,max_hr\n");
         printf("%f,%f,%f,%f,%f,%f\n",mean_time,min_time,max_time,mean_hit_ratio,min_hit_ratio,max_hit_ratio);
     }
-    hfetch::MPI_Finalize();
+    MPI_Finalize();
     //clean_env(args);
     return 0;
 }
