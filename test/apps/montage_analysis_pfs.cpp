@@ -92,7 +92,7 @@ int main(int argc, char*argv[]){
             std::fclose(file);
             t.pauseTime();
         } else if (operation == "FWRITE") {
-            c/*har* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
+            /*char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
             t.resumeTime();
             std::fseek(file, (size_t) offset,SEEK_SET);
             std::fwrite(writebuf, request_size,sizeof(char),file);
