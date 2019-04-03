@@ -2,9 +2,6 @@
 // Created by hariharan on 3/18/19.
 //
 #include <mpi.h>
-#include <src/common/macros.h>
-#include <src/common/configuration_manager.h>
-#include <src/common/singleton.h>
 #include <sys/stat.h>
 #include "../util.h"
 
