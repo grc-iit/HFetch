@@ -50,7 +50,6 @@ int main(int argc, char*argv[]){
         request_size = atol(word)*MULTIPLIER;
         max_size=max_size<offset+request_size?offset+request_size:max_size;
     }
-    free(line);
     std::fclose(trace);
     max_size+=(max_size%MB);
     if(my_rank==0){
@@ -113,6 +112,7 @@ int main(int argc, char*argv[]){
             t.pauseTime();
         }
     }
+    free(line);
     std::fclose(trace);
     double v = t.endTime();
     MPI_Barrier(MPI_COMM_WORLD);

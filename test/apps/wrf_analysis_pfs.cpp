@@ -23,7 +23,7 @@ int main(int argc, char*argv[]){
         getchar();
     }
     MPI_Barrier(MPI_COMM_WORLD);*/
-    const int MULTIPLIER=32;
+    const int MULTIPLIER=1024;
     char *pfs_path = getenv("RUN_DIR");
     string filename = std::string(argv[0]);
     string directory;
@@ -99,12 +99,12 @@ int main(int argc, char*argv[]){
             std::fclose(file);
             t.pauseTime();
         } else if (operation == "FWRITE") {
-            /*char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
+            char* writebuf = (char*)calloc((size_t) request_size,sizeof(char));
             t.resumeTime();
             std::fseek(file, (size_t) offset,SEEK_SET);
             std::fwrite(writebuf, request_size,sizeof(char),file);
             t.pauseTime();
-            if(writebuf) free(writebuf);*/
+            if(writebuf) free(writebuf);
         }else if (operation == "FREAD") {
             char* readbuf = (char*)malloc((size_t) request_size);
             t.resumeTime();
