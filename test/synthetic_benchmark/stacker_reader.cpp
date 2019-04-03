@@ -198,7 +198,7 @@ int main(int argc, char*argv[]){
     double mean_hit_ratio = sum_hit_ratio / comm_size;
     if(my_rank == 0) {
         printf("mean_time,min_time,max_time,mean_hr,min_hr,max_hr\n");
-        printf("%f,%f,%f,%f,%f,%f\n",mean_time,min_time,max_time,mean_hit_ratio,min_hit_ratio,max_hit_ratio);
+        printf("%f,%f,%f,%f,%f,%f\n",mean_time/1000,min_time/1000,max_time/1000,mean_hit_ratio,min_hit_ratio,max_hit_ratio);
     }
 
     hfetch::MPI_Finalize();
