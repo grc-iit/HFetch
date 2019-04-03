@@ -32,8 +32,8 @@ inline bool exists(char* name) {
 
 typedef enum ReaderType{
     READ_ENTIRE_EACH_TS=0,
-    READ_ENTIRE_MULTI_TS=1,
-    READ_ENTIRE_EVERY_HALF_TS=2,
+    READ_ENTIRE_SAME_TS=1,
+    READ_ENTIRE_EVERY_STRIDE_TS=2,
     READ_ENTIRE_RANDOM_HALF_TS=3,
 } ReaderType;
 typedef unsigned long long really_long;
@@ -128,48 +128,54 @@ int main(int argc, char*argv[]){
             free(buf);
             break;
         }
-        case ReaderType::READ_ENTIRE_EVERY_HALF_TS:{
+        case ReaderType::READ_ENTIRE_EVERY_STRIDE_TS:{
             ssize_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size;
+            size_t read_iterations=file_size/read_size/2;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
-                if(i%2==0){
-                    for(int j=0;j<read_iterations;++j){
-                        hfetch::fread(buf,read_size,1,fh);
-                        if(input.compute_sec!=0) sleep(input.compute_sec);
-                    }
-                    hfetch::fseek(fh,0L,SEEK_SET);
+                for(int j=0;j<read_iterations;++j){
+                    hfetch::fseek(fh,(j+my_rank%2)*read_size,SEEK_SET);
+                    hfetch::fread(buf,read_size,1,fh);
+                    if(input.compute_sec!=0) sleep(input.compute_sec);
                 }
+                hfetch::fseek(fh,0L,SEEK_SET);
+
             }
             free(buf);
             break;
         }
-        case ReaderType::READ_ENTIRE_MULTI_TS:{
+        case ReaderType::READ_ENTIRE_SAME_TS:{
             size_t read_size = 1*1024*1024;
-            size_t read_iterations=timesteps/4;
+            size_t read_iterations=file_size/read_size/2;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
-                hfetch::fread(buf,read_size,1,fh);
-                if(input.compute_sec!=0) sleep(input.compute_sec);
-                if(timesteps%read_iterations==0) hfetch::fseek(fh,0L,SEEK_SET);
+                for(int j=0;j<read_iterations;++j){
+                    hfetch::fseek(fh,(my_rank%(read_iterations-1))*read_size,SEEK_SET);
+                    hfetch::fread(buf,read_size,1,fh);
+                    if(input.compute_sec!=0) sleep(input.compute_sec);
+                }
+                hfetch::fseek(fh,0L,SEEK_SET);
+
             }
             free(buf);
             break;
         }
         case ReaderType::READ_ENTIRE_RANDOM_HALF_TS:{
-            size_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size;
-            void* buf = malloc(read_size);
+
             srand(200);
+
+            size_t read_size = 1*1024*1024;
+            size_t read_iterations=file_size/read_size/2;
+            void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
-                int random = rand();
-                if(random%2==0){
-                    for(int j=0;j<read_iterations;++j){
-                        hfetch::fread(buf,read_size,1,fh);
-                        if(input.compute_sec!=0) sleep(input.compute_sec);
-                    }
-                    hfetch::fseek(fh,0L,SEEK_SET);
+                for(int j=0;j<read_iterations;++j){
+                    int random = rand();
+                    hfetch::fseek(fh,(random%(read_iterations-1)*read_size,SEEK_SET);
+                    hfetch::fread(buf,read_size,1,fh);
+                    if(input.compute_sec!=0) sleep(input.compute_sec);
                 }
+                hfetch::fseek(fh,0L,SEEK_SET);
+
             }
             free(buf);
             break;

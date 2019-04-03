@@ -10,6 +10,21 @@
 #include <sys/stat.h>
 #include "../util.h"
 
+char* GenerateData(long size){
+    char* data= static_cast<char *>(malloc(size));
+    size_t num_elements=size;
+    size_t offset=0;
+    srand(200);
+    for(int i=0;i<num_elements;++i) {
+        int random = rand();
+        char c = static_cast<char>((random % 26) + 'a');
+        memcpy(data + offset, &c, sizeof(char));
+        offset += sizeof(char);
+    }
+    return data;
+}
+
+
 inline bool exists(char* name) {
     struct stat buffer;
     return (stat(name, &buffer) == 0);
@@ -17,8 +32,8 @@ inline bool exists(char* name) {
 
 typedef enum ReaderType{
     READ_ENTIRE_EACH_TS=0,
-    READ_ENTIRE_MULTI_TS=1,
-    READ_ENTIRE_EVERY_HALF_TS=2,
+    READ_ENTIRE_SAME_TS=1,
+    READ_ENTIRE_EVERY_STRIDE_TS=2,
     READ_ENTIRE_RANDOM_HALF_TS=3,
 } ReaderType;
 typedef unsigned long long really_long;
@@ -72,17 +87,17 @@ int main(int argc, char*argv[]){
         sprintf(filename_1, "%s/pfs/test_0.bat", pfs_path);
         if(!exists(filename_1)){
             char command[256];
-            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d >& /dev/null",filename_1,MB,file_size/MB);
+            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d > /dev/null 2>&1",filename_1,MB,file_size/MB);
             run_command(command);
         }
         char filename_2[256];
         sprintf(filename_2, "%s/pfs/test_1.bat", pfs_path);
         if(!exists(filename_2)){
             char command[256];
-            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d >& /dev/null",filename_2,MB,file_size/MB);
+            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d > /dev/null 2>&1",filename_2,MB,file_size/MB);
             run_command(command);
         }
-        printf("Data is prepared for the test\n");
+        printf("Data is prepared for the test of size %d MB\n",file_size*2/MB);
     }
     MPI_Barrier(MPI_COMM_WORLD);
     if (my_rank == 0) {
@@ -100,7 +115,8 @@ int main(int argc, char*argv[]){
     switch(input.type){
         case ReaderType::READ_ENTIRE_EACH_TS:{
             size_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size;
+            size_t read_iterations=file_size/read_size/comm_size;
+            read_iterations=read_iterations==0?1:read_iterations;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
                 for(int j=0;j<read_iterations;++j){
@@ -112,48 +128,54 @@ int main(int argc, char*argv[]){
             free(buf);
             break;
         }
-        case ReaderType::READ_ENTIRE_EVERY_HALF_TS:{
-            size_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size;
+        case ReaderType::READ_ENTIRE_EVERY_STRIDE_TS:{
+            ssize_t read_size = 1*1024*1024;
+            size_t read_iterations=file_size/read_size/2;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
-                if(i%2==0){
-                    for(int j=0;j<read_iterations;++j){
-                        std::fread(buf,read_size,1,fh);
-                        if(input.compute_sec!=0) sleep(input.compute_sec);
-                    }
-                    std::fseek(fh,0L,SEEK_SET);
+                for(int j=0;j<read_iterations;++j){
+                    std::fseek(fh,(j+my_rank%2)*read_size,SEEK_SET);
+                    std::fread(buf,read_size,1,fh);
+                    if(input.compute_sec!=0) sleep(input.compute_sec);
                 }
+                std::fseek(fh,0L,SEEK_SET);
+
             }
             free(buf);
             break;
         }
-        case ReaderType::READ_ENTIRE_MULTI_TS:{
+        case ReaderType::READ_ENTIRE_SAME_TS:{
             size_t read_size = 1*1024*1024;
-            size_t read_iterations=timesteps/4;
+            size_t read_iterations=file_size/read_size/2;
             void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
-                std::fread(buf,read_size,1,fh);
-                if(input.compute_sec!=0) sleep(input.compute_sec);
-                if(timesteps%read_iterations==0) std::fseek(fh,0L,SEEK_SET);
+                for(int j=0;j<read_iterations;++j){
+                    std::fseek(fh,(my_rank%(read_iterations-1))*read_size,SEEK_SET);
+                    std::fread(buf,read_size,1,fh);
+                    if(input.compute_sec!=0) sleep(input.compute_sec);
+                }
+                std::fseek(fh,0L,SEEK_SET);
+
             }
             free(buf);
             break;
         }
         case ReaderType::READ_ENTIRE_RANDOM_HALF_TS:{
-            size_t read_size = 1*1024*1024;
-            size_t read_iterations=file_size/read_size;
-            void* buf = malloc(read_size);
+
             srand(200);
+
+            size_t read_size = 1*1024*1024;
+            size_t read_iterations=file_size/read_size/2;
+            void* buf = malloc(read_size);
             for(size_t i=0;i<timesteps;++i){
-                int random = rand();
-                if(random%2==0){
-                    for(int j=0;j<read_iterations;++j){
-                        std::fread(buf,read_size,1,fh);
-                        if(input.compute_sec!=0) sleep(input.compute_sec);
-                    }
-                    std::fseek(fh,0L,SEEK_SET);
+                for(int j=0;j<read_iterations;++j){
+                    int random = rand();
+                    std::fseek(fh,(random%(read_iterations-1)*read_size,SEEK_SET);
+                    std::fread(buf,read_size,1,fh);
+                    if(input.compute_sec!=0) sleep(input.compute_sec);
                 }
+                std::fseek(fh,0L,SEEK_SET);
+
             }
             free(buf);
             break;
@@ -161,8 +183,8 @@ int main(int argc, char*argv[]){
     }
     std::fclose(fh);
     double v = t.endTime();
-    printf("rank:%d hit ratio %f time %f\n",my_rank,CONF->hit/(CONF->total*1.0),v);
     MPI_Barrier(MPI_COMM_WORLD);
+    printf("rank:%d hit ratio %f time %f\n",my_rank,CONF->hit/(CONF->total*1.0),v);
     hfetch::MPI_Finalize();
     //clean_env(args);
     return 0;
