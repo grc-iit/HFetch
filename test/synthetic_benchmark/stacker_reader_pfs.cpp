@@ -36,14 +36,14 @@ struct ReaderInput{
     ReaderType type;
     size_t compute_sec;
     int iteration_;
-    size_t io_size_;
+    size_t io_size_mb;
 };
 
 inline ReaderInput ParseArgs(int argc,char* argv[]){
     ReaderInput args;
     args.type=ReaderType::READ_ENTIRE_EACH_TS;
     args.compute_sec=0;
-    args.io_size_=1024*1024*1024;
+    args.io_size_mb=1024;
     args.iteration_=1;
     int opt;
     /* a:c:d:f:i:l:m:n:p:r:s:w: */
@@ -65,7 +65,7 @@ inline ReaderInput ParseArgs(int argc,char* argv[]){
                 break;
             }
             case 'i':{
-                args.io_size_= (size_t) atoi(optarg);
+                args.io_size_mb= (size_t) atoi(optarg);
                 break;
             }
             default: {}
@@ -82,21 +82,21 @@ int main(int argc, char*argv[]){
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     ReaderInput input = ParseArgs(argc,argv);
-    size_t file_size = input.io_size_/2;
+    size_t file_size = input.io_size_mb*MB/2;
     char *pfs_path = getenv("RUN_DIR");
     if(my_rank==0){
         char filename_1[256];
         sprintf(filename_1, "%s/pfs/test_0.bat", pfs_path);
         if(!exists(filename_1)){
             char command[256];
-            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d > /dev/null 2>&1",filename_1,MB,file_size/MB);
+            sprintf(command,"dd if=/dev/urandom of=%s bs=1 count=0 seek=%dM > /dev/null 2>&1",filename_1, file_size/MB);
             run_command(command);
         }
         char filename_2[256];
         sprintf(filename_2, "%s/pfs/test_1.bat", pfs_path);
         if(!exists(filename_2)){
             char command[256];
-            sprintf(command,"dd if=/dev/urandom of=%s bs=%d count=%d > /dev/null 2>&1",filename_2,MB,file_size/MB);
+            sprintf(command,"dd if=/dev/urandom of=%s bs=1 count=0 seek=%dM > /dev/null 2>&1",filename_2, file_size/MB);
             run_command(command);
         }
         printf("Data is prepared for the test of size %d MB\n",file_size*2/MB);
