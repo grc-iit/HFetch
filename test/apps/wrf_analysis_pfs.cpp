@@ -23,7 +23,7 @@ int main(int argc, char*argv[]){
         getchar();
     }
     MPI_Barrier(MPI_COMM_WORLD);*/
-    const int MULTIPLIER=1024;
+    const int MULTIPLIER=32;
     char *pfs_path = getenv("RUN_DIR");
     string filename = std::string(argv[0]);
     string directory;
@@ -79,7 +79,7 @@ int main(int argc, char*argv[]){
     trace = std::fopen(trace_file_name.c_str(), "r");
 
     FILE* file;
-    while ((readsize = getline(reinterpret_cast<char **>(&line), &len, trace)) != -1) {
+    while ((readsize = getline(&line, &len, trace)) != -1) {
         if (readsize < 4) {
             break;
         }
