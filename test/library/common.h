@@ -166,7 +166,7 @@ public:
         count=0;
         size = processedEvents.Size(CONF->my_server);
         while(size > 0){
-            size = processedEvents.Size(CONF->my_server)
+            size = processedEvents.Size(CONF->my_server);
             if(count%10000==0) printf("Processed Event Size: %d",size);
             count++;
         }
