@@ -126,6 +126,10 @@ public:
                 t2 - t1).count()/1000000.0;
         return time_elapsed;
     }
+
+    double getTimeElapsed(){
+        return time_elapsed;
+    }
 };
 
 

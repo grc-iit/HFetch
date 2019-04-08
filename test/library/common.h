@@ -83,22 +83,35 @@ private:
     std::promise<void>* daemonSignals, *engineSignals;
 
     void RunDaemons(std::future<void> futureObj,int index){
+        Timer pop_time;
+        Timer put_time;
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
-            auto result = messageQueue.Pop(CONF->my_server);
-            if(result.first){
-                uint64_t val=sequence.GetNextSequenceServer(0);
-                processedEvents.Push(val,CONF->my_server);
-                processedMap.Put(val,result.second);
+            if(messageQueue.Size(CONF->my_server)>0){
+                pop_time.resumeTime();
+                auto result = messageQueue.Pop(CONF->my_server);
+                pop_time.pauseTime();
+                if(result.first){
+                    uint64_t val=sequence.GetNextSequenceServer(0);
+                    processedEvents.Push(val,CONF->my_server);
+                    put_time.resumeTime();
+                    processedMap.Put(val,result.second);
+                    put_time.pauseTime();
+                }
             }
         }
+        printf("Daemon %d,pop time %f,put time %f\n",index,pop_time.getTimeElapsed(),put_time.getTimeElapsed());
     }
     void RunEngines(std::future<void> futureObj,int index){
+        Timer engine_time;
         while(futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout){
             auto result = processedEvents.Pop(CONF->my_server);
             if(result.first){
+                engine_time.resumeTime();
                 processedMap.Get(result.second);
+                engine_time.pauseTime();
             }
         }
+        printf("Engine %d,get time %f\n",index,engine_time.getTimeElapsed());
     }
 public:
     ~Server(){
@@ -162,6 +175,7 @@ struct Input{
     size_t num_daemons;
     size_t num_engines;
     size_t num_events;
+    int num_servers;
 };
 
 inline Input ParseArgs(int argc,char* argv[]){
@@ -169,15 +183,20 @@ inline Input ParseArgs(int argc,char* argv[]){
     args.num_daemons=1;
     args.num_engines=1;
     args.num_events=10000;
+    args.num_servers=1;
     int opt;
     /* a:c:d:f:i:l:m:n:p:r:s:w: */
     optind=1;
-    while ((opt = getopt (argc, argv, "d:p:e:")) != -1)
+    while ((opt = getopt (argc, argv, "d:p:e:s:")) != -1)
     {
         switch (opt)
         {
             case 'd':{
                 args.num_daemons= atoi(optarg);
+                break;
+            }
+            case 's':{
+                args.num_servers= atoi(optarg);
                 break;
             }
             case 'p':{
