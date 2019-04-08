@@ -35,7 +35,6 @@ int main(int argc, char*argv[]){
         getchar();
     }
     MPI_Barrier(MPI_COMM_WORLD);
-    server->Stop();
     MPI_Finalize();
     return 0;
 }

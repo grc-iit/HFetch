@@ -115,21 +115,24 @@ private:
     }
 public:
     ~Server(){
-        Stop();
-        delete(daemons);
-        delete(daemonSignals);
-        delete(engines);
-        delete(engineSignals);
+        if(CONF->is_server){
+            delete(daemons);
+            delete(daemonSignals);
+            delete(engines);
+            delete(engineSignals);
+        }
     }
     Server():   messageQueue("MESSAGE_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
                 processedEvents("PROCESSED_EVENTS_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
                 processedMap("PROCESSED_EVENTS_MAP",CONF->is_server,CONF->my_server,CONF->num_servers),
                 sequence("EventSequence",CONF->is_server,CONF->my_server,CONF->num_servers),
                 numDaemons(1),numEngines(1){
-        daemons = new std::thread[numDaemons];
-        daemonSignals = new std::promise<void>[numDaemons];
-        engines = new std::thread[numEngines];
-        engineSignals = new std::promise<void>[numEngines];
+        if(CONF->is_server){
+            daemons = new std::thread[numDaemons];
+            daemonSignals = new std::promise<void>[numDaemons];
+            engines = new std::thread[numEngines];
+            engineSignals = new std::promise<void>[numEngines];
+        }
     }
     Server(size_t num_daemons_,size_t num_engines_):messageQueue("MESSAGE_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
                                                     processedEvents("PROCESSED_EVENTS_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
@@ -148,7 +151,7 @@ public:
         }
         for(int i=0;i<numDaemons;++i){
             std::future<void> futureObj = daemonSignals[i].get_future();
-            engines[i] = std::thread(&Server::RunDaemons, this, std::move(futureObj),i);
+            daemons[i] = std::thread(&Server::RunDaemons, this, std::move(futureObj),i);
         }
     }
     void Stop(){
