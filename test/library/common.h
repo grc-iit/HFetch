@@ -96,7 +96,7 @@ private:
                     put_time.resumeTime();
                     processedMap.Put(val,result.second);
                     put_time.pauseTime();
-                }
+                }else printf("result.first is false\n");
             }
         }
         printf("Daemon %d,pop time,%f,put time,%f\n",index,pop_time.getTimeElapsed(),put_time.getTimeElapsed());
