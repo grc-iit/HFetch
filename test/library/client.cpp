@@ -29,7 +29,10 @@ int main(int argc, char*argv[]){
         server->PushEvent(event);
         client_time.pauseTime();
     }
-    printf("Client %d,push time,%f\n",my_rank,client_time.getTimeElapsed());
+    double v = client_time.getTimeElapsed();
+    double sum_time;
+    MPI_Allreduce(&v, &sum_time, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    if(my_rank == 0) printf("Client,push time,%f\n",sum_time/comm_size);
     if (CONF->my_rank_world == 0) {
         printf("Press any key to exit server\n");
         getchar();
