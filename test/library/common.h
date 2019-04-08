@@ -156,9 +156,20 @@ public:
     }
     void Stop(){
         size_t size = messageQueue.Size(CONF->my_server);
-        while(size > 0) size = messageQueue.Size(CONF->my_server);
+
+        int count=0;
+        while(size > 0){
+            size = messageQueue.Size(CONF->my_server);
+            if(count%10000==0) printf("MessageQueue Size: %d",size);
+            count++;
+        }
+        count=0;
         size = processedEvents.Size(CONF->my_server);
-        while(size > 0) size = processedEvents.Size(CONF->my_server);
+        while(size > 0){
+            size = processedEvents.Size(CONF->my_server)
+            if(count%10000==0) printf("Processed Event Size: %d",size);
+            count++;
+        }
         for(int i=0;i<numDaemons;++i){
             daemonSignals[i].set_value();
             if(daemons[i].joinable()) daemons[i].join();
