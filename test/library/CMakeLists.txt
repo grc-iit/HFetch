@@ -6,7 +6,7 @@ set(ENV{LD_PRELOAD} "ENV{LD_PRELOAD} ${CMAKE_BINARY_DIR}")
 #Execute basic examples
 set(examples server client)
 foreach (example ${examples})
-    add_executable (${example} ${example}.cpp ../util.h)
+    add_executable (${example} ${example}.cpp ../util.h common.h)
     add_dependencies(${example} hfetch)
     target_include_directories(${example} PRIVATE "${CMAKE_BINARY_DIR}/")
     set_target_properties(${example} PROPERTIES ENV TEST_ENV="LD_PRELOAD=-L${CMAKE_BINARY_DIR}/libhfetch.so")
