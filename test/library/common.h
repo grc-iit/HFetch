@@ -28,7 +28,50 @@ typedef struct EventTest{
         return *this;
     }
 } EventTest;
+namespace clmdep_msgpack {
+    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
+        namespace adaptor {
+            namespace mv1=clmdep_msgpack::v1;
+            template<>
+            struct convert<EventTest> {
+                mv1::object const& operator()(mv1::object const& o, EventTest& input) const {
+                    input.filename = o.via.array.ptr[0].as<CharStruct>();
+                    input.offset = o.via.array.ptr[1].as<long>();
+                    input.size = o.via.array.ptr[2].as<long>();
+                    input.time = o.via.array.ptr[3].as<long>();
+                    return o;
+                }
+            };
 
+            template<>
+            struct pack<EventTest> {
+                template <typename Stream>
+                packer<Stream>& operator()(mv1::packer<Stream>& o, EventTest const& input) const {
+                    // packing member variables as an array.
+                    o.pack_array(4);
+                    o.pack(input.filename);
+                    o.pack(input.offset);
+                    o.pack(input.size);
+                    o.pack(input.time);
+                    return o;
+                }
+            };
+
+            template <>
+            struct object_with_zone<EventTest> {
+                void operator()(mv1::object::with_zone& o, EventTest const& input) const {
+                    o.type = type::ARRAY;
+                    o.via.array.size = 4;
+                    o.via.array.ptr = static_cast<clmdep_msgpack::object*>(o.zone.allocate_align(sizeof(mv1::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(mv1::object)));
+                    o.via.array.ptr[0] = mv1::object(input.filename, o.zone);
+                    o.via.array.ptr[1] = mv1::object(input.offset, o.zone);
+                    o.via.array.ptr[2] = mv1::object(input.size, o.zone);
+                    o.via.array.ptr[3] = mv1::object(input.time, o.zone);
+                }
+            };
+        }
+    }
+}
 class Server{
 private:
     DistributedMessageQueue<EventTest> messageQueue;
@@ -65,46 +108,46 @@ public:
         delete(engines);
         delete(engineSignals);
     }
-    Server():messageQueue("MESSAGE_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
-                                                    processedEvents("PROCESSED_EVENTS_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
-                                                    processedMap("PROCESSED_EVENTS_MAP",CONF->is_server,CONF->my_server,CONF->num_servers),
-                                                    sequence("EventSequence",CONF->is_server,CONF->my_server,CONF->num_servers)
-    num_daemons(1),num_engines(1){
+    Server():   messageQueue("MESSAGE_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
+                processedEvents("PROCESSED_EVENTS_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
+                processedMap("PROCESSED_EVENTS_MAP",CONF->is_server,CONF->my_server,CONF->num_servers),
+                sequence("EventSequence",CONF->is_server,CONF->my_server,CONF->num_servers),
+                numDaemons(1),numEngines(1){
         daemons = new std::thread[numDaemons];
         daemonSignals = new std::promise<void>[numDaemons];
-        engines = new std::thread[num_engines];
-        engineSignals = new std::promise<void>[num_engines];
+        engines = new std::thread[numEngines];
+        engineSignals = new std::promise<void>[numEngines];
     }
     Server(size_t num_daemons_,size_t num_engines_):messageQueue("MESSAGE_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
                                                     processedEvents("PROCESSED_EVENTS_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
                                                     processedMap("PROCESSED_EVENTS_MAP",CONF->is_server,CONF->my_server,CONF->num_servers),
-                                                    sequence("EventSequence",CONF->is_server,CONF->my_server,CONF->num_servers)
-    num_daemons(num_daemons_),num_engines(num_engines_){
+                                                    sequence("EventSequence",CONF->is_server,CONF->my_server,CONF->num_servers),
+                                                    numDaemons(num_daemons_),numEngines(num_engines_){
         daemons = new std::thread[numDaemons];
         daemonSignals = new std::promise<void>[numDaemons];
-        engines = new std::thread[num_engines];
-        engineSignals = new std::promise<void>[num_engines];
+        engines = new std::thread[numEngines];
+        engineSignals = new std::promise<void>[numEngines];
     }
     void Run(){
-        for(int i=0;i<num_engines;++i){
+        for(int i=0;i<numEngines;++i){
             std::future<void> futureObj = engineSignals[i].get_future();
             engines[i] = std::thread(&Server::RunEngines, this, std::move(futureObj),i);
         }
-        for(int i=0;i<num_engines;++i){
+        for(int i=0;i<numDaemons;++i){
             std::future<void> futureObj = daemonSignals[i].get_future();
             engines[i] = std::thread(&Server::RunDaemons, this, std::move(futureObj),i);
         }
     }
     void Stop(){
-        size = messageQueue.Size(CONF->my_server);
+        size_t size = messageQueue.Size(CONF->my_server);
         while(size > 0) size = messageQueue.Size(CONF->my_server);
-        size_t size = processedEvents.Size(CONF->my_server);
+        size = processedEvents.Size(CONF->my_server);
         while(size > 0) size = processedEvents.Size(CONF->my_server);
         for(int i=0;i<numDaemons;++i){
             daemonSignals[i].set_value();
             if(daemons[i].joinable()) daemons[i].join();
         }
-        for(int i=0;i<num_engines;++i){
+        for(int i=0;i<numEngines;++i){
             engineSignals[i].set_value();
             if(engines[i].joinable()) engines[i].join();
         }
@@ -121,8 +164,8 @@ struct Input{
     size_t num_events;
 };
 
-inline ReaderInput ParseArgs(int argc,char* argv[]){
-    ReaderInput args;
+inline Input ParseArgs(int argc,char* argv[]){
+    Input args;
     args.num_daemons=1;
     args.num_engines=1;
     args.num_events=10000;

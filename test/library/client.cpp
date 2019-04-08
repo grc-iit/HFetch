@@ -17,7 +17,7 @@ int main(int argc, char*argv[]){
         event.offset=1024*1024*i;
         event.size=1024*1024;
         event.time=i;
-        server->Push(event);
+        server->PushEvent(event);
     }
     if (CONF->my_rank_world == 0) {
         printf("Press any key to exit server\n");
