@@ -158,7 +158,7 @@ public:
         size_t size = messageQueue.Size(CONF->my_server);
 
         int count=0;
-        size_t prev_size=size;
+        size_t prev_size=-1;
         while(size > 0){
             size = messageQueue.Size(CONF->my_server);
             if(count%100000==0 && prev_size != size){
@@ -169,7 +169,7 @@ public:
         }
         count=0;
         size = processedEvents.Size(CONF->my_server);
-        prev_size=size;
+        prev_size=-1;
         while(size > 0){
             size = processedEvents.Size(CONF->my_server);
             if(count%100000==0 && prev_size != size){
