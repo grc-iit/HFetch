@@ -116,10 +116,10 @@ private:
 public:
     ~Server(){
         if(CONF->is_server){
-            delete(daemons);
+            /*delete(daemons);
             delete(daemonSignals);
             delete(engines);
-            delete(engineSignals);
+            delete(engineSignals);*/
         }
     }
     Server():   messageQueue("MESSAGE_QUEUE",CONF->is_server,CONF->my_server,CONF->num_servers),
