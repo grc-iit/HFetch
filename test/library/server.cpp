@@ -16,6 +16,7 @@ int main(int argc, char*argv[]){
     int my_rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    //FIXME: add values to CONF correctly
     auto server = Singleton<Server>::GetInstance(args.num_daemons,args.num_engines);
     server->Run();
     if (CONF->my_rank_world == 0) {
