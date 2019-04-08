@@ -96,7 +96,7 @@ private:
                     put_time.resumeTime();
                     processedMap.Put(val,result.second);
                     put_time.pauseTime();
-                }else printf("result.first is false\n");
+                }
             }
         }
         printf("Daemon %d,pop time,%f,put time,%f\n",index,pop_time.getTimeElapsed(),put_time.getTimeElapsed());
@@ -143,6 +143,8 @@ public:
         daemonSignals = new std::promise<void>[numDaemons];
         engines = new std::thread[numEngines];
         engineSignals = new std::promise<void>[numEngines];
+        auto rpc = Singleton<RPC>::GetInstance("RPC_SERVER_LIST",CONF->is_server,CONF->my_server,CONF->comm_size);
+        rpc->run(1);
     }
     void Run(){
         for(int i=0;i<numEngines;++i){
