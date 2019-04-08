@@ -164,7 +164,7 @@ public:
         while(size > 0){
             size = messageQueue.Size(CONF->my_server);
             if(count%100000==0 && prev_size != size){
-                printf("MessageQueue Size: %d\n",size);
+                printf("MessageQueue Size %d: %d\n",CONF->my_server,size);
                 prev_size=size;
             }
             count++;
@@ -175,7 +175,7 @@ public:
         while(size > 0){
             size = processedEvents.Size(CONF->my_server);
             if(count%100000==0 && prev_size != size){
-                printf("Processed Event Size: %d\n",size);
+                printf("Processed Event Size %d: %d\n",CONF->my_server,size);
                 prev_size=size;
             }
             count++;
