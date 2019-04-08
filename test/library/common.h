@@ -99,7 +99,7 @@ private:
                 }
             }
         }
-        printf("Daemon %d,pop time %f,put time %f\n",index,pop_time.getTimeElapsed(),put_time.getTimeElapsed());
+        printf("Daemon %d,pop time,%f,put time,%f\n",index,pop_time.getTimeElapsed(),put_time.getTimeElapsed());
     }
     void RunEngines(std::future<void> futureObj,int index){
         Timer engine_time;
@@ -111,7 +111,7 @@ private:
                 engine_time.pauseTime();
             }
         }
-        printf("Engine %d,get time %f\n",index,engine_time.getTimeElapsed());
+        printf("Engine %d,get time,%f\n",index,engine_time.getTimeElapsed());
     }
 public:
     ~Server(){

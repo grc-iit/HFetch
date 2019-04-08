@@ -29,7 +29,7 @@ int main(int argc, char*argv[]){
         server->PushEvent(event);
         client_time.pauseTime();
     }
-    printf("Client %d,push time %f\n",my_rank,client_time.getTimeElapsed());
+    printf("Client %d,push time,%f\n",my_rank,client_time.getTimeElapsed());
     if (CONF->my_rank_world == 0) {
         printf("Press any key to exit server\n");
         getchar();
