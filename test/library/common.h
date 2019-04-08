@@ -158,16 +158,24 @@ public:
         size_t size = messageQueue.Size(CONF->my_server);
 
         int count=0;
+        size_t prev_size=size;
         while(size > 0){
             size = messageQueue.Size(CONF->my_server);
-            if(count%100000==0) printf("MessageQueue Size: %d\n",size);
+            if(count%100000==0 && prev_size != size){
+                printf("MessageQueue Size: %d\n",size);
+                prev_size=size;
+            }
             count++;
         }
         count=0;
         size = processedEvents.Size(CONF->my_server);
+        prev_size=size;
         while(size > 0){
             size = processedEvents.Size(CONF->my_server);
-            if(count%100000==0) printf("Processed Event Size: %d\n",size);
+            if(count%100000==0 && prev_size != size){
+                printf("Processed Event Size: %d\n",size);
+                prev_size=size;
+            }
             count++;
         }
         for(int i=0;i<numDaemons;++i){
