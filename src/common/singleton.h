@@ -1,18 +1,23 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
- * All rights reserved.                                                      *
- *                                                                           *
- * This file is part of HDF5. The full HDF5 copyright notice, including      *
- * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html. COPYING can be found at the root    *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page. It can also be found at      *
- * http://hdfgroup.org/HDF5/doc/Copyright.html. If you do not have           *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
+/*
+ * Copyright (C) 2019  SCS Lab <scs-help@cs.iit.edu>, Hariharan
+ * Devarajan <hdevarajan@hawk.it.edu>, Xian-He Sun <sun@iit.edu>
+ *
+ * This file is part of HFetch
+ * 
+ * HFetch is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
 /*-------------------------------------------------------------------------
 *
 * Created: singleton.h
