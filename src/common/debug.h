@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2019  SCS Lab <scs-help@cs.iit.edu>, Hariharan
- * Devarajan <hdevarajan@hawk.it.edu>, Xian-He Sun <sun@iit.edu>
+ * Devarajan <hdevarajan@hawk.iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of HFetch
  * 
