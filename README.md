@@ -1,38 +1,64 @@
-# README #
+# Introduction
 
-This README would normally document whatever steps are necessary to get your application up and running.
+In the era of data-intensive computing, accessing data with a high-throughput and low-latency is more imperative than ever. Data prefetching is a well-known technique for hiding read latency. However, existing solutions do not consider the new deep memory and storage hierarchy and also suffer from under-utilization of prefetching resources and unnecessary evictions. Additionally, existing approaches implement a client-pull model where understanding the application's I/O behavior drives prefetching decisions. Moving towards exascale, where machines run multiple applications concurrently by accessing files in a workflow, a more data-centric approach can resolve challenges such as cache pollution and redundancy. In this study, we present HFetch, a truly hierarchical data prefetcher that adopts a server-push approach to data prefetching. We demonstrate the benefits of such an approach. Results show 10-35% performance gains over existing prefetchers and over 50% when compared to systems with no prefetching.
 
-### What is this repository for? ###
+# Who uses
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+HFetch is used within [Hermes](http://www.cs.iit.edu/~scs/assets/projects/Hermes/Hermes.html) to perform hierarchical prefetching of data based on various application and system characteristics.
 
-### How do I get set up? ###
+# How it works
+-   HFetch contains a library (libhfetch) which transparently intercepts all POSIX and HDF5 calls.
+-   HFetch has a server that should be deployed on each node and performs data-centric prefetching.
+    
 
-* Summary of set up
-* Configuration
-* Dependencies
-#mpich 3.3+
-`./configure --prefix=/home/hdevarajan/software/install --enable-fast=03 --enable-shared --enable-romio --enable-threads --disable-fortran --disable-fc --enable-onsig --enable-debuginfo --enable-g=handle`
+# Dependencies
+-   Cmake > 3.13,3
+-   Gcc > 7.3    
+-   MPICH > 3.3
+-   HDF5 > 10
+-   H5Part
+-   Boost > 1.69.0
+-   RapidJSON
+-   RPClib
+    
+# Installation
 
-* Database configuration
-* How to run tests
-#servers
+## Cmake
 
-#clients
-`mpirun -n $((64*8)) -f hostfile ./basic -s 8 -r 64`
+`mkdir build && cd build`
+`cmake ../`
+`make -j8 && make install`
 
-`mpirun -n $((1*8)) -f hostfile1 ./stacker_reader -s 8 -r 1 -n 2 -b 0`
-* Deployment instructions
+# Usage
 
-### Contribution guidelines ###
+## Library
 
-* Writing tests
-* Code review
-* Other guidelines
+Applications need to link their executable with libhfetch. Internally, HFetch lib intercepts file operations (fopen,fclose, etc.) defined using POSIX and HDF5 calls of the applications.
 
-### Who do I talk to? ###
+## Server
 
-* Repo owner or admin
-* Other community or team contact
+Each node of HFetch should deploy a server instance.
+
+`
+./hfetch_server
+`
+
+# Running Tests
+
+## Ctest
+
+### VPIC:
+
+`ctest -R vpic`
+
+### WRF:
+
+`ctest -R wrf`
+
+### All:
+
+`ctest`
+
+# License:
+
+# Acknowledgments:
